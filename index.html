@@ -1,8 +1,22 @@
 <!DOCTYPE html>
 <html>
 <head>
-<script src="resourceTiming.js"></script>
+<script src="requestNotifier.js"></script>
 <script>
+notifyOfRequests(() => console.log("request starting"),
+                 () => console.log("request maybe starting"));
+
+const url = "https://upload.wikimedia.org/wikipedia/commons/3/3f/Fronalpstock_big.jpg";
+
+var oReq = new XMLHttpRequest();
+oReq.addEventListener("load", () =>
+  console.log("have response from load"));
+oReq.open("GET", url);
+oReq.send('test');
+
+document.write("test");
+
+fetch(url).then((r) => console.log("have response from fetch"));
 </script>
 <style>
 </style>
