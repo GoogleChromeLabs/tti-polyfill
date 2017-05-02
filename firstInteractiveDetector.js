@@ -148,7 +148,7 @@ window._firstInteractiveDetector = (function() {
     }
 
     get _incompleteRequestStarts() {
-      return [...this._incompleteJSInitiatedRequestStartTimes.values()]
+      return [...this._incompleteJSInitiatedRequestStartTimes.values()];
     }
 
     _checkTTI() {
