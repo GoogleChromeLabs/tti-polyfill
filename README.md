@@ -27,3 +27,9 @@ $timestamp`. The `$timestamp` is number of miliseconds since navigationStart.
 
 If you want to turn off the chattiness, pass in `{debugMode: false}` in the
 `FirstInteractiveDetector` constructor (which is called in `main.js`).
+
+
+### Known Issues
+- Google Calendar becomes laggy with this user script. Probably has something to
+  do with the way we are patching XHR and fetch. You should probably disable the
+  user script when you're not using it.
