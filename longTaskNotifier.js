@@ -3,8 +3,6 @@ window._observer = new PerformanceObserver(function(entryList) {
   window._networkReqs = window._networkReqs || [];
   window._longTasks = window._longTasks || [];
   for (var i = 0; i < entries.length; i++) {
-    console.log("New observer entry!")
-    console.log(entries[i]);
     if (entries[i].entryType === 'resource') {
       window._networkReqs.push([entries[i].fetchStart, entries[i].responseEnd]);
     }

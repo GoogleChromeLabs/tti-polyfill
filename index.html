@@ -1,24 +1,34 @@
 <!DOCTYPE html>
 <html>
 <head>
-<script src="requestNotifier.js"></script>
-<script src="longTaskNotifier.js"></script>
-<script src="consistentlyInteractive.js"></script>
+<script src="firstInteractiveCore.js"></script>
+<!-- <script src="firstInteractiveCoreTest.js"></script> -->
+<script src="activityTrackerUtils.js"></script>
+<script src="firstInteractiveDetector.js"></script>
+<script src="main.js"></script>
+
+
 <script>
-notifyOfRequests(() => console.log("request starting"),
-                 () => console.log("request maybe starting"));
+// notifyOfRequests((that) => {
+//      console.log("request starting", that);
+//      // setTimeout(() => {
+//      //   const resources = performance.getEntriesByType("resource");
+//      //   console.log("Resources", resources);
+//      // }, 5e3);
+//  },
+//                  (that) => console.log("request maybe starting", that));
 
 const url = "https://upload.wikimedia.org/wikipedia/commons/3/3f/Fronalpstock_big.jpg";
 
-var oReq = new XMLHttpRequest();
-oReq.addEventListener("load", () =>
-  console.log("have response from load"));
-oReq.open("GET", url);
-oReq.send('test');
+// var oReq = new XMLHttpRequest();
+// oReq.addEventListener("load", () =>
+//   console.log("have response from load"));
+// oReq.open("GET", url);
+// oReq.send('test');
 
-document.write("test");
+// document.write("test");
 
-fetch(url).then((r) => console.log("have response from fetch"));
+setTimeout(() => fetch(url).then((r) => console.log("have response")), 1000);
 </script>
 <style>
 </style>

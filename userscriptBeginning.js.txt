@@ -1,0 +1,20 @@
+// ==UserScript==
+// @name         Time to Interactive Polyfill
+// @namespace    http://developers.google.com/
+// @version      0.1
+// @description  Polyfill to detect Time to Interactive
+// @author       Deepanjan Roy
+// @include      http://*
+// @include      https://*
+// @run-at       document-start
+// @noframes
+// @grant        none
+// ==/UserScript==
+
+(function() {
+    'use strict';
+    if (window._ttiPolyfillLoaded) return;
+    window._ttiPolyfillLoaded = true;
+
+    console.log("tti userscript running");
+    (function() {
