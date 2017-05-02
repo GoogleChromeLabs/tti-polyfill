@@ -18,3 +18,12 @@ Status: In development.
 - Paste in `http://deepanjan.me/tti-polyfill/TTI-Polyfill-UserScript-Generated.js` in the URL box and click import to install script.
 
 This version may lag from the tip of tree.
+
+### Console output
+
+By default, right now the polyfill is very verbose about what it's doing. You
+should eventually see something along the lines of `First interactive found:
+$timestamp`. The `$timestamp` is number of miliseconds since navigationStart.
+
+If you want to turn off the chattiness, pass in `{debugMode: false}` in the
+`FirstInteractiveDetector` constructor (which is called in `main.js`).
