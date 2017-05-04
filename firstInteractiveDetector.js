@@ -8,7 +8,10 @@ const FirstInteractiveCore = window._FirstInteractiveCore;
 window._firstInteractiveDetector = (function() {
   class FirstInteractiveDetector {
     constructor(options) {
-      this._debugMode = options.debugMode || false;
+      this._debugMode = options.debugMode !== undefined ?
+        options.debugMode : false;
+      this._useMutationObserver = options.useMutationObserver !== undefined ?
+        options.useMutationObserver : true;
       this._timerId = null;
       this._timerActivationTime = -Infinity;
 
@@ -20,7 +23,7 @@ window._firstInteractiveDetector = (function() {
 
       // Timer tasks are only scheduled when detector is enabled.
       this._scheduleTimerTasks = false;
-      this._registeristeners();
+      this._registerListeners();
     }
 
     startSchedulingTimerTasks() {
@@ -83,13 +86,20 @@ window._firstInteractiveDetector = (function() {
       this._performanceObserver.observe({entryTypes: ["longtask", "resource"]});
     }
 
-    _registeristeners() {
+    _registerMutationObserver() {
+      this._mutationObserver =
+        ActivityTrackerUtils.observeResourceFetchingMutations(
+          this._mutationObserverCallback.bind(this));
+    }
+
+    _registerListeners() {
       ActivityTrackerUtils.patchXMLHTTPRequest(this._beforeJSInitiatedRequestCallback.bind(this),
                           this._afterJSInitiatedRequestCallback.bind(this));
       ActivityTrackerUtils.patchFetch(this._beforeJSInitiatedRequestCallback.bind(this),
                  this._afterJSInitiatedRequestCallback.bind(this));
       ActivityTrackerUtils.patchDocumentWrite(this._beforeDocumentWriteCallback.bind(this));
       this._registerPerformanceObserver();
+      if (this._useMutationObserver) this._registerMutationObserver();
     }
 
     _unregisterListeners() {
@@ -97,6 +107,7 @@ window._firstInteractiveDetector = (function() {
       // since we cannot guarantee they were not modified further in between.
       // Only unregister performance observers.
       if (this._performanceObserver) this._performanceObserver.disconnect();
+      if (this._mutationObserver) this._mutationObserver.disconnect();
     }
 
     _beforeJSInitiatedRequestCallback(requestId) {
@@ -113,7 +124,7 @@ window._firstInteractiveDetector = (function() {
 
     _beforeDocumentWriteCallback() {
       this._debugLog("Document.write call detected. Pushing back FirstInteractive check by 5 seconds.");
-      firstInteractiveDetector.rescheduleTimer(performance.now() + 5000);
+      this.rescheduleTimer(performance.now() + 5000);
     }
 
     _networkRequestFinishedCallback(performanceEntry) {
@@ -135,6 +146,12 @@ window._firstInteractiveDetector = (function() {
         end: taskEndTime
       });
       this.rescheduleTimer(taskEndTime + 5000);
+    }
+
+    _mutationObserverCallback(mutationRecord) {
+      this._debugLog("Potentially network resource fetching mutation detected: ", mutationRecord);
+      this._debugLog("Pushing back FirstInteractive check by 5 seconds.");
+      this.rescheduleTimer(performance.now() + 5000);
     }
 
     _getMinValue() {
