@@ -97,13 +97,12 @@ window._firstConsistentlyInteractiveDetector = (function() {
                           this._afterJSInitiatedRequestCallback.bind(this));
       ActivityTrackerUtils.patchFetch(this._beforeJSInitiatedRequestCallback.bind(this),
                  this._afterJSInitiatedRequestCallback.bind(this));
-      ActivityTrackerUtils.patchDocumentWrite(this._beforeDocumentWriteCallback.bind(this));
       this._registerPerformanceObserver();
       if (this._useMutationObserver) this._registerMutationObserver();
     }
 
     _unregisterListeners() {
-      // We will leave the XHR / Fetch / DocWrite objects the way they were,
+      // We will leave the XHR / Fetch objects the way they were,
       // since we cannot guarantee they were not modified further in between.
       // Only unregister performance observers.
       if (this._performanceObserver) this._performanceObserver.disconnect();
@@ -120,11 +119,6 @@ window._firstConsistentlyInteractiveDetector = (function() {
       this._debugLog("Completed JS initiated request with request ID: ", requestId);
       this._incompleteJSInitiatedRequestStartTimes.delete(requestId);
       this._debugLog("Active XHRs: ", this._incompleteJSInitiatedRequestStartTimes.size);
-    }
-
-    _beforeDocumentWriteCallback() {
-      this._debugLog("Document.write call detected. Pushing back FirstConsistentlyInteractive check by 5 seconds.");
-      this.rescheduleTimer(performance.now() + 5000);
     }
 
     _networkRequestFinishedCallback(performanceEntry) {

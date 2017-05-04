@@ -50,14 +50,6 @@ window._ActivityTrackerUtils = (function() {
     };
   }
 
-  function patchDocumentWrite(docWriteCb) {
-    const write = Document.prototype.write;
-    Document.prototype.write = function() {
-      docWriteCb(arguments);
-      return write.apply(this, arguments);
-    };
-  }
-
   const _nodeTypesFetchingNetworkResources = ["img", "script", "iframe", "link", "audio", "video", "source"];
 
   function _descendentContainsNodeType(nodeTypes, nodes) {
@@ -108,6 +100,5 @@ window._ActivityTrackerUtils = (function() {
     observeResourceFetchingMutations,
     patchXMLHTTPRequest,
     patchFetch,
-    patchDocumentWrite,
   };
 })();
