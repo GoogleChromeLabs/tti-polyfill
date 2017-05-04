@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-<script src="firstInteractiveCore.js"></script>
-<!-- <script src="firstInteractiveCoreTest.js"></script> -->
+<script src="firstConsistentlyInteractiveCore.js"></script>
+<!-- <script src="firstConsistentlyInteractiveCoreTest.js"></script> -->
 <script src="activityTrackerUtils.js"></script>
-<script src="firstInteractiveDetector.js"></script>
+<script src="firstConsistentlyInteractiveDetector.js"></script>
 <script src="main.js"></script>
 
 
@@ -36,31 +36,5 @@ setTimeout(() => fetch(url).then((r) => console.log("have response")), 1000);
 </style>
 </head>
 <body>
-    <div id="mutateThis"></div>
-    <img src="https://upload.wikimedia.org/wikipedia/commons/3/3f/Fronalpstock_big.jpg">
-    <a id="anchorTagToMutate">Some link</a>
-    <link id="linkTagToMutate">
-    <script>
-     setTimeout(() => {
-         /* document.querySelector("#mutateThis").innerHTML = '<img src="https://upload.wikimedia.org/wikipedia/commons/3/3f/Fronalpstock_big.jpg">';*/
-         const a = document.createElement("a")
-         a.setAttribute("href", "http://www.google.com")
-         a.innerText = "Google"
-         // TODO: Convert this to a test.
-         /* document.querySelector("#mutateThis").appendChild(a);*/
-         /* document.querySelector("#mutateThis").innerHTML = ('<img src="Sdfsdf">');*/
-         // This should not fire mutation events
-         // document.querySelector("#mutateThis").innerHTML = ('<a href="Sdfsdf">');
-         // This should not fire our listener
-         document.querySelector("#anchorTagToMutate").setAttribute('src', "Whatever man");
-         // This should fire our listener
-         document.querySelector("#linkTagToMutate").setAttribute('href', "Whatever man");
-
-         console.log("Mutation performed");
-     }, 1000);
-
-
-    </script>
-
 </body>
 </html>

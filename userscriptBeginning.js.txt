@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         Time to Interactive Polyfill
+// @name         Time to Consistently Interactive Polyfill
 // @namespace    http://developers.google.com/
 // @version      0.1
 // @description  Polyfill to detect Time to Interactive
@@ -13,8 +13,8 @@
 
 (function() {
     'use strict';
-    if (window._ttiPolyfillLoaded) return;
-    window._ttiPolyfillLoaded = true;
+    if (window._ttciPolyfillLoaded) return;
+    window._ttciPolyfillLoaded = true;
 
-    console.log("tti userscript running");
+    console.log("ttci userscript running");
     (function() {

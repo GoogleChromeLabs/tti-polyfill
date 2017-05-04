@@ -32,6 +32,7 @@ const tests = [
     console.log("testAddingNestedImageTagFiresCallback - pending results");
     setTimeout(() => observer.disconnect(), 10);
   }),
+
   (function testAddingSrcAttributeFiresCallback() {
     const observer = observeResourceFetchingMutations(mutation => {
       assert(mutation.target.id, "imgTagToMutate");
@@ -41,6 +42,7 @@ const tests = [
     console.log("testAddingSrcAttributeFiresCallback - pending results");
     setTimeout(() => observer.disconnect(), 10);
   }),
+
   (function testAddingHrefAttributeToLinkTagsFiresCallback() {
     const observer = observeResourceFetchingMutations(mutation => {
       assert(mutation.target.id, "linkTagToMutate");
@@ -50,6 +52,7 @@ const tests = [
     console.log("testAddingHrefAttributeToLinkTagFiresCallback - pending results");
     setTimeout(() => observer.disconnect(), 10);
   }),
+
   (function testAddingHrefAttributeToAnchorTagShouldNotFireCallback() {
     let mutationCallbackCalled = false;
     const observer = observeResourceFetchingMutations(mutation => {

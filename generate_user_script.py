@@ -1,6 +1,6 @@
 beginning = 'userscriptBeginning.js.txt'
 ending = 'userscriptEnding.js.txt'
-input_files = ['firstInteractiveCore.js', 'activityTrackerUtils.js', 'firstInteractiveDetector.js', 'main.js']
+input_files = ['firstConsistentlyInteractiveCore.js', 'activityTrackerUtils.js', 'firstConsistentlyInteractiveDetector.js', 'main.js']
 output_file = 'TTI-UserScript.js'
 
 with open(output_file, 'w') as outfile:
