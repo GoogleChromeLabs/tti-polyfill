@@ -90,65 +90,112 @@ window._FirstInteractiveCore = (function() {
 // TODO: Have a better moduling system
 
 window._ActivityTrackerUtils = (function() {
-    class Counter {
-      constructor() {
-        this._count = 0;
+  class Counter {
+    constructor() {
+      this._count = 0;
+    }
+
+    next() {
+      this._count++;
+      return this._count;
+    }
+  }
+
+  const requestCounter = new Counter();
+
+  function patchXMLHTTPRequest(beforeXHRSendCb, onRequestCompletedCb) {
+    const send = XMLHttpRequest.prototype.send;
+    const requestId = requestCounter.next();
+    XMLHttpRequest.prototype.send = function() {
+      beforeXHRSendCb(requestId);
+      this.addEventListener('readystatechange', e => {
+        // readyState 4 corresponds to 'DONE'
+        if (this.readyState === 4) onRequestCompletedCb(requestId);
+      });
+      return send.apply(this, arguments);
+    };
+  }
+
+  function patchFetch(beforeRequestCb, afterRequestCb){
+    const originalFetch = fetch;
+    fetch = function() {
+      return new Promise((resolve, reject) => {
+        console.log("New fetch running");
+        const requestId = requestCounter.next();
+        beforeRequestCb(requestId);
+        originalFetch.apply(this, arguments).then(
+          value => {
+            afterRequestCb(requestId);
+            resolve(value);
+          },
+          e => {
+            afterRequestCb(e);
+            reject(e);
+          }
+        );
+      });
+    };
+  }
+
+  function patchDocumentWrite(docWriteCb) {
+    const write = Document.prototype.write;
+    Document.prototype.write = function() {
+      docWriteCb(arguments);
+      return write.apply(this, arguments);
+    };
+  }
+
+  const _nodeTypesFetchingNetworkResources = ["img", "script", "iframe", "link", "audio", "video", "source"];
+
+  function _descendentContainsNodeType(nodeTypes, nodes) {
+    for (const node of nodes) {
+      if (nodeTypes.includes(node.nodeName.toLowerCase())) {
+        return true;
       }
 
-      next() {
-        this._count++;
-        return this._count;
+      if (node.children && _descendentContainsNodeType(nodeTypes, node.children)) {
+        return true;
+      };
+    }
+
+    return false;
+  }
+
+  function observeResourceFetchingMutations(callback) {
+    const mutationObserver = new MutationObserver(function (mutations) {
+      for (const mutation of mutations) {
+        switch (mutation.type) {
+        case "childList":
+          if (_descendentContainsNodeType(
+            _nodeTypesFetchingNetworkResources, mutation.addedNodes)) {
+            callback(mutation);
+          }
+          break;
+        case "attributes":
+          if (_nodeTypesFetchingNetworkResources.includes(mutation.target.tagName.toLowerCase())) {
+            callback(mutation);
+          }
+          break;
+        }
       }
-    }
+    });
 
-    const requestCounter = new Counter();
+    const observerConfig = {
+      attributes: true,
+      childList: true,
+      subtree: true,
+      attributeFilter: ['href', 'src'],
+    };
 
-    function patchXMLHTTPRequest(beforeXHRSendCb, onRequestCompletedCb) {
-      const send = XMLHttpRequest.prototype.send;
-      const requestId = requestCounter.next();
-      XMLHttpRequest.prototype.send = function() {
-        beforeXHRSendCb(requestId);
-        this.addEventListener('readystatechange', e => {
-          // readyState 4 corresponds to 'DONE'
-          if (this.readyState === 4) onRequestCompletedCb(requestId);
-        });
-        return send.apply(this, arguments);
-      };
-    }
-
-    function patchFetch(beforeRequestCb, afterRequestCb){
-      const originalFetch = fetch;
-      fetch = function() {
-        return new Promise((resolve, reject) => {
-          console.log("New fetch running");
-          const requestId = requestCounter.next();
-          beforeRequestCb(requestId);
-          originalFetch.apply(this, arguments).then(
-            value => {
-              afterRequestCb(requestId);
-              resolve(value);
-            },
-            e => {
-              afterRequestCb(e);
-              reject(e);
-            }
-          );
-        });
-      };
-    }
-
-    function patchDocumentWrite(docWriteCb) {
-      const write = Document.prototype.write;
-      Document.prototype.write = function() {
-        docWriteCb(arguments);
-        return write.apply(this, arguments);
-      };
-    }
+    mutationObserver.observe(document, observerConfig);
+    return mutationObserver;
+  }
 
   return {
+    observeResourceFetchingMutations,
     patchXMLHTTPRequest,
     patchFetch,
-    patchDocumentWrite
+    patchDocumentWrite,
   };
 })();
 // TODO: Have a better moduling system
@@ -159,7 +206,10 @@ const FirstInteractiveCore = window._FirstInteractiveCore;
 window._firstInteractiveDetector = (function() {
   class FirstInteractiveDetector {
     constructor(options) {
-      this._debugMode = options.debugMode || false;
+      this._debugMode = options.debugMode !== undefined ?
+        options.debugMode : false;
+      this._useMutationObserver = options.useMutationObserver !== undefined ?
+        options.useMutationObserver : true;
       this._timerId = null;
       this._timerActivationTime = -Infinity;
 
@@ -171,7 +221,7 @@ window._firstInteractiveDetector = (function() {
 
       // Timer tasks are only scheduled when detector is enabled.
       this._scheduleTimerTasks = false;
-      this._registeristeners();
+      this._registerListeners();
     }
 
     startSchedulingTimerTasks() {
@@ -234,13 +284,20 @@ window._firstInteractiveDetector = (function() {
       this._performanceObserver.observe({entryTypes: ["longtask", "resource"]});
     }
 
-    _registeristeners() {
+    _registerMutationObserver() {
+      this._mutationObserver =
+        ActivityTrackerUtils.observeResourceFetchingMutations(
+          this._mutationObserverCallback.bind(this));
+    }
+
+    _registerListeners() {
       ActivityTrackerUtils.patchXMLHTTPRequest(this._beforeJSInitiatedRequestCallback.bind(this),
                           this._afterJSInitiatedRequestCallback.bind(this));
       ActivityTrackerUtils.patchFetch(this._beforeJSInitiatedRequestCallback.bind(this),
                  this._afterJSInitiatedRequestCallback.bind(this));
       ActivityTrackerUtils.patchDocumentWrite(this._beforeDocumentWriteCallback.bind(this));
       this._registerPerformanceObserver();
+      if (this._useMutationObserver) this._registerMutationObserver();
     }
 
     _unregisterListeners() {
@@ -248,6 +305,7 @@ window._firstInteractiveDetector = (function() {
       // since we cannot guarantee they were not modified further in between.
       // Only unregister performance observers.
       if (this._performanceObserver) this._performanceObserver.disconnect();
+      if (this._mutationObserver) this._mutationObserver.disconnect();
     }
 
     _beforeJSInitiatedRequestCallback(requestId) {
@@ -264,7 +322,7 @@ window._firstInteractiveDetector = (function() {
 
     _beforeDocumentWriteCallback() {
       this._debugLog("Document.write call detected. Pushing back FirstInteractive check by 5 seconds.");
-      firstInteractiveDetector.rescheduleTimer(performance.now() + 5000);
+      this.rescheduleTimer(performance.now() + 5000);
     }
 
     _networkRequestFinishedCallback(performanceEntry) {
@@ -288,6 +346,12 @@ window._firstInteractiveDetector = (function() {
       this.rescheduleTimer(taskEndTime + 5000);
     }
 
+    _mutationObserverCallback(mutationRecord) {
+      this._debugLog("Potentially network resource fetching mutation detected: ", mutationRecord);
+      this._debugLog("Pushing back FirstInteractive check by 5 seconds.");
+      this.rescheduleTimer(performance.now() + 5000);
+    }
+
     _getMinValue() {
       if (this._minValue) return this._minValue;
 
@@ -299,7 +363,7 @@ window._firstInteractiveDetector = (function() {
     }
 
     get _incompleteRequestStarts() {
-      return [...this._incompleteJSInitiatedRequestStartTimes.values()]
+      return [...this._incompleteJSInitiatedRequestStartTimes.values()];
     }
 
     _checkTTI() {
@@ -362,18 +426,22 @@ console.log("Loading Time to Interactive Polyfill");
     console.timeStamp("Roughly 1s mark");
   }, 1000);
 
-  const ActivityTrackerUtils = window._ActivityTrackerUtils;
-  const FirstInteractiveCore = window._FirstInteractiveCore;
   const FirstInteractiveDetector = window._firstInteractiveDetector.FirstInteractiveDetector;
-
   const firstInteractiveDetector = new FirstInteractiveDetector({debugMode: true});
 
-  document.addEventListener('DOMContentLoaded', () => {
-    console.log("DOM Content Loaded fired - scheduling FirstInteractive timer tasks");
-    // firstInteractiveDetector.setMinValue(20000);
+  if (document.readyState === "complete" || document.readyState === "loaded") {
+    console.log("Document already sufficiently loaded. Scheduling FirstInteractive timer tasks.");
     firstInteractiveDetector.startSchedulingTimerTasks();
-  });
+  } else {
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log("DOM Content Loaded fired - scheduling FirstInteractive timer tasks");
 
+      // You can use this to set a custom minimum value.
+      // firstInteractiveDetector.setMinValue(20000);
+
+      firstInteractiveDetector.startSchedulingTimerTasks();
+    });
+  }
 })();
     })();
 })();
