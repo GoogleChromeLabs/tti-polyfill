@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         Time to Interactive Polyfill
+// @name         Time to Consistently Interactive Polyfill
 // @namespace    http://developers.google.com/
 // @version      0.1
 // @description  Polyfill to detect Time to Interactive
@@ -13,14 +13,14 @@
 
 (function() {
     'use strict';
-    if (window._ttiPolyfillLoaded) return;
-    window._ttiPolyfillLoaded = true;
+    if (window._ttciPolyfillLoaded) return;
+    window._ttciPolyfillLoaded = true;
 
-    console.log("tti userscript running");
+    console.log("ttci userscript running");
     (function() {
 // TODO: Have a better moduling system
 
-window._FirstInteractiveCore = (function() {
+window._FirstConsistentlyInteractiveCore = (function() {
   function computeFirstConsistentlyInteractive(
       searchStart, minValue, lastKnownNetwork2Busy, currentTime, longTasks) {
 
@@ -201,10 +201,10 @@ window._ActivityTrackerUtils = (function() {
 // TODO: Have a better moduling system
 
 const ActivityTrackerUtils = window._ActivityTrackerUtils;
-const FirstInteractiveCore = window._FirstInteractiveCore;
+const FirstConsistentlyInteractiveCore = window._FirstConsistentlyInteractiveCore;
 
-window._firstInteractiveDetector = (function() {
-  class FirstInteractiveDetector {
+window._firstConsistentlyInteractiveDetector = (function() {
+  class FirstConsistentlyInteractiveDetector {
     constructor(options) {
       this._debugMode = options.debugMode !== undefined ?
         options.debugMode : false;
@@ -225,9 +225,9 @@ window._firstInteractiveDetector = (function() {
     }
 
     startSchedulingTimerTasks() {
-      this._debugLog("Enabling FirstInteractiveDetector");
+      this._debugLog("Enabling FirstConsistentlyInteractiveDetector");
       this._scheduleTimerTasks = true;
-      this.rescheduleTimer(FirstInteractiveCore.computeLastKnownNetwork2Busy(this._incompleteRequestStarts, this._networkRequests) + 5000);
+      this.rescheduleTimer(FirstConsistentlyInteractiveCore.computeLastKnownNetwork2Busy(this._incompleteRequestStarts, this._networkRequests) + 5000);
     }
 
     setMinValue(minValue) {
@@ -236,13 +236,13 @@ window._firstInteractiveDetector = (function() {
 
     // earlistTime is a timestamp in ms, and the time is relative to navigationStart.
     rescheduleTimer(earliestTime) {
-      // Check if ready to start looking for firstInteractive
+      // Check if ready to start looking for firstConsistentlyInteractive
       if (!this._scheduleTimerTasks) {
         this._debugLog("startSchedulingTimerTasks must be called before calling rescheduleTimer");
         return;
       }
 
-      this._debugLog("Attempting to reschedule FirstInteractive check to ", earliestTime);
+      this._debugLog("Attempting to reschedule FirstConsistentlyInteractive check to ", earliestTime);
       this._debugLog("Previous timer activation time: ", this._timerActivationTime);
 
       if (this._timerActivationTime > earliestTime) {
@@ -252,11 +252,11 @@ window._firstInteractiveDetector = (function() {
       clearTimeout(this._timerId);
       this._timerId = setTimeout(() => this._checkTTI(), earliestTime - performance.now());
       this._timerActivationTime = earliestTime;
-      this._debugLog("Rescheduled firstInteractive check at ", earliestTime);
+      this._debugLog("Rescheduled firstConsistentlyInteractive check at ", earliestTime);
     }
 
     disable() {
-      this._debugLog("Disabling FirstInteractiveDetector");
+      this._debugLog("Disabling FirstConsistentlyInteractiveDetector");
       clearTimeout(this._timerId);
       this._scheduleTimerTasks = false;
       this._unregisterListeners();
@@ -269,15 +269,15 @@ window._firstInteractiveDetector = (function() {
     }
 
     _registerPerformanceObserver() {
-      const firstInteractiveDetector = this;
+      const firstConsistentlyInteractiveDetector = this;
       this._performanceObserver = new PerformanceObserver(function(entryList) {
         var entries = entryList.getEntries();
         for (const entry of entries) {
           if (entry.entryType === 'resource') {
-            firstInteractiveDetector._networkRequestFinishedCallback(entry);
+            firstConsistentlyInteractiveDetector._networkRequestFinishedCallback(entry);
           }
           if (entry.entryType === "longtask") {
-            firstInteractiveDetector._longTaskFinishedCallback(entry);
+            firstConsistentlyInteractiveDetector._longTaskFinishedCallback(entry);
           }
         }
       });
@@ -321,7 +321,7 @@ window._firstInteractiveDetector = (function() {
     }
 
     _beforeDocumentWriteCallback() {
-      this._debugLog("Document.write call detected. Pushing back FirstInteractive check by 5 seconds.");
+      this._debugLog("Document.write call detected. Pushing back FirstConsistentlyInteractive check by 5 seconds.");
       this.rescheduleTimer(performance.now() + 5000);
     }
 
@@ -332,7 +332,7 @@ window._firstInteractiveDetector = (function() {
         end: performanceEntry.responseEnd
       });
       this.rescheduleTimer(
-        FirstInteractiveCore.computeLastKnownNetwork2Busy(this._incompleteRequestStarts, this._networkRequests) + 5000);
+        FirstConsistentlyInteractiveCore.computeLastKnownNetwork2Busy(this._incompleteRequestStarts, this._networkRequests) + 5000);
     }
 
     _longTaskFinishedCallback(performanceEntry) {
@@ -348,7 +348,7 @@ window._firstInteractiveDetector = (function() {
 
     _mutationObserverCallback(mutationRecord) {
       this._debugLog("Potentially network resource fetching mutation detected: ", mutationRecord);
-      this._debugLog("Pushing back FirstInteractive check by 5 seconds.");
+      this._debugLog("Pushing back FirstConsistentlyInteractive check by 5 seconds.");
       this.rescheduleTimer(performance.now() + 5000);
     }
 
@@ -367,9 +367,9 @@ window._firstInteractiveDetector = (function() {
     }
 
     _checkTTI() {
-      this._debugLog("Checking if First Interactive was reached...");
+      this._debugLog("Checking if First Consistently Interactive was reached...");
       const navigationStart = performance.timing.navigationStart;
-      const lastBusy = FirstInteractiveCore.computeLastKnownNetwork2Busy(this._incompleteRequestStarts, this._networkRequests);
+      const lastBusy = FirstConsistentlyInteractiveCore.computeLastKnownNetwork2Busy(this._incompleteRequestStarts, this._networkRequests);
       const firstPaint = chrome.loadTimes().firstPaintTime;
       // If firstPaint is not set yet, searchStart is navigationStart.
       const searchStart = firstPaint === 0 ? 0 : chrome.loadTimes().firstPaintTime * 1000 - navigationStart;
@@ -394,25 +394,25 @@ window._firstInteractiveDetector = (function() {
       this._debugLog("Incomplete JS Request Start Times: ", this._incompleteRequestStarts);
       this._debugLog("Network requests: ", this._networkRequests);
 
-      const maybeFCI = FirstInteractiveCore.computeFirstConsistentlyInteractive(
+      const maybeFCI = FirstConsistentlyInteractiveCore.computeFirstConsistentlyInteractive(
           searchStart, minValue, lastBusy, currentTime, this._longTasks);
       if (maybeFCI) {
-        console.log("First interactive found: ", maybeFCI);
+        console.log("First Consistently Interactive found: ", maybeFCI);
         this.disable();
         return maybeFCI;
       }
 
-      // First Interactive was not reached for whatever reasons. Check again in
+      // First Consistently Interactive was not reached for whatever reasons. Check again in
       // one second.
       // Eventually we should become confident enough in our scheduler logic to
       // get rid of this step.
-      this._debugLog("Could not detect First Interactive. Retrying in 1 second.");
+      this._debugLog("Could not detect First Consistently Interactive. Retrying in 1 second.");
       this.rescheduleTimer(performance.now() + 1000);
     }
   }
 
   return {
-    FirstInteractiveDetector,
+    FirstConsistentlyInteractiveDetector,
   };
 })();
 console.log("Loading Time to Interactive Polyfill");
@@ -426,20 +426,22 @@ console.log("Loading Time to Interactive Polyfill");
     console.timeStamp("Roughly 1s mark");
   }, 1000);
 
-  const FirstInteractiveDetector = window._firstInteractiveDetector.FirstInteractiveDetector;
-  const firstInteractiveDetector = new FirstInteractiveDetector({debugMode: true});
+  const FirstConsistentlyInteractiveDetector =
+        window._firstConsistentlyInteractiveDetector.FirstConsistentlyInteractiveDetector;
+  const firstConsistentlyInteractiveDetector =
+        new FirstConsistentlyInteractiveDetector({debugMode: true});
 
   if (document.readyState === "complete" || document.readyState === "loaded") {
     console.log("Document already sufficiently loaded. Scheduling FirstInteractive timer tasks.");
-    firstInteractiveDetector.startSchedulingTimerTasks();
+    firstConsistentlyInteractiveDetector.startSchedulingTimerTasks();
   } else {
     document.addEventListener('DOMContentLoaded', () => {
       console.log("DOM Content Loaded fired - scheduling FirstInteractive timer tasks");
 
       // You can use this to set a custom minimum value.
-      // firstInteractiveDetector.setMinValue(20000);
+      // firstConsistentlyInteractiveDetector.setMinValue(20000);
 
-      firstInteractiveDetector.startSchedulingTimerTasks();
+      firstConsistentlyInteractiveDetector.startSchedulingTimerTasks();
     });
   }
 })();
