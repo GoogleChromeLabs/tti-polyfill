@@ -67,16 +67,30 @@ const tests = [
 
     setTimeout(() => observer.disconnect(), 15);
   }),
-]
+];
 
 // Run a test every 50ms, so we have more than enough time to connect and
 // disconnect new mutation observers.
 // TODO: Figure out a way to make things less hacky.
-setTimeout(function runOneTest() {
-  const f = tests.pop();
-  f();
-  if (tests.length > 0) setTimeout(runOneTest, 50);
-}, 50);
+// setTimeout(function runOneTest() {
+//   const f = tests.pop();
+//   f();
+//   if (tests.length > 0) setTimeout(runOneTest, 50);
+// }, 50);
+
+function testAddingHrefAttributeToLinkTagsFiresCallback() {
+  const observer = observeResourceFetchingMutations(mutation => {
+    console.log(mutation);
+    assert(mutation.target.id, "linkTagToMutate");
+    console.log("testAddingHrefAttributeToLinkTagFiresCallback - passed");
+  })
+  document.querySelector('#linkTagToMutate').href = "http://example.com";
+  console.log("testAddingHrefAttributeToLinkTagFiresCallback - pending results");
+  setTimeout(() => observer.disconnect(), 10);
+}
+
+testAddingHrefAttributeToLinkTagsFiresCallback();
+
 </script>
 </body>
 </html>

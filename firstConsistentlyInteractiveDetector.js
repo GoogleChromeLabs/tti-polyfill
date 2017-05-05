@@ -7,29 +7,52 @@ const FirstConsistentlyInteractiveCore = window._FirstConsistentlyInteractiveCor
 
 window._firstConsistentlyInteractiveDetector = (function() {
   class FirstConsistentlyInteractiveDetector {
-    constructor(options) {
-      this._debugMode = options.debugMode !== undefined ?
-        options.debugMode : false;
-      this._useMutationObserver = options.useMutationObserver !== undefined ?
-        options.useMutationObserver : true;
+    constructor(config) {
+      this._debugMode = config.debugMode !== undefined ?
+        config.debugMode : false;
+      this._useMutationObserver = config.useMutationObserver !== undefined ?
+        config.useMutationObserver : true;
+
+      // If we recorded some long tasks before this class was initialized,
+      // consume them now.
+      if (window.__tti_lts) {
+        this._debugLog("Consuming the long task entries already recorded.");
+        this._longTasks = window.__tti_lts.map(performanceEntry =>
+            ({start: performanceEntry.startTime,
+             end: performanceEntry.startTime + performanceEntry.duration}));
+      } else {
+        this._longTasks = [];
+      }
+
+      // If we had a long task observer attached by the snippet, disconnect it
+      // here. We will be adding a new long task observer soon with a more
+      // complex callback.
+      if (window.__tti_lto) {
+        window.__tti_lto.disconnect();
+      }
+
+      this._networkRequests = [];
+      this._incompleteJSInitiatedRequestStartTimes = new Map();
+
       this._timerId = null;
       this._timerActivationTime = -Infinity;
 
-      this._networkRequests = [];
-      this._longTasks = [];
-      this._incompleteJSInitiatedRequestStartTimes = new Map();
+      // Timer tasks are only scheduled when detector is enabled.
+      this._scheduleTimerTasks = false;
+
       // If minValue is null, by default it is DOMContentLoadedEnd.
       this._minValue = null;
 
-      // Timer tasks are only scheduled when detector is enabled.
-      this._scheduleTimerTasks = false;
       this._registerListeners();
     }
 
     startSchedulingTimerTasks() {
       this._debugLog("Enabling FirstConsistentlyInteractiveDetector");
       this._scheduleTimerTasks = true;
-      this.rescheduleTimer(FirstConsistentlyInteractiveCore.computeLastKnownNetwork2Busy(this._incompleteRequestStarts, this._networkRequests) + 5000);
+      const lastLongTaskEnd = this._longTasks.length > 0 ?
+            this._longTasks[this.longTasks.length - 1] : 0;
+      const lastKnownNetwork2Busy = FirstConsistentlyInteractiveCore.computeLastKnownNetwork2Busy(this._incompleteRequestStarts, this._networkRequests);
+      this.rescheduleTimer(Math.max(lastKnownNetwork2Busy + 5000, lastLongTaskEnd));
     }
 
     setMinValue(minValue) {

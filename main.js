@@ -11,17 +11,18 @@ console.log("Loading Time to Interactive Polyfill");
     console.timeStamp("Roughly 1s mark");
   }, 1000);
 
+  console.log("document.readyState", document.readyState);
   const FirstConsistentlyInteractiveDetector =
         window._firstConsistentlyInteractiveDetector.FirstConsistentlyInteractiveDetector;
   const firstConsistentlyInteractiveDetector =
         new FirstConsistentlyInteractiveDetector({debugMode: true});
 
-  if (document.readyState === "complete" || document.readyState === "loaded") {
+  if (document.readyState === "complete") {
     console.log("Document already sufficiently loaded. Scheduling FirstInteractive timer tasks.");
     firstConsistentlyInteractiveDetector.startSchedulingTimerTasks();
   } else {
-    document.addEventListener('DOMContentLoaded', () => {
-      console.log("DOM Content Loaded fired - scheduling FirstInteractive timer tasks");
+    window.addEventListener('load', () => {
+      console.log("Load event fired - scheduling FirstInteractive timer tasks");
 
       // You can use this to set a custom minimum value.
       // firstConsistentlyInteractiveDetector.setMinValue(20000);

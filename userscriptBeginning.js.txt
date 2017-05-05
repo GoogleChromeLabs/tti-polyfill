@@ -6,7 +6,7 @@
 // @author       Deepanjan Roy
 // @include      http://*
 // @include      https://*
-// @run-at       document-start
+// @run-at       document-idle
 // @noframes
 // @grant        none
 // ==/UserScript==

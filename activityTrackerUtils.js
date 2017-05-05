@@ -60,13 +60,13 @@ window._ActivityTrackerUtils = (function() {
 
       if (node.children && _descendentContainsNodeType(nodeTypes, node.children)) {
         return true;
-      };
+      }
     }
 
     return false;
   }
 
-  function observeResourceFetchingMutations(callback) {
+  function observeResourceFetchingMutations(callback, childListNodeCallback, attributeNodeCallback) {
     const mutationObserver = new MutationObserver(function (mutations) {
       for (const mutation of mutations) {
         switch (mutation.type) {
