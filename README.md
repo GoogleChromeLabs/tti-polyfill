@@ -25,7 +25,7 @@ npm run generate_polyfill_minified
 If you to see TTCI values of different sites, it may be useful to install it as a userscript: 
 
 - Install a user script runner like [tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo?hl=en) on chrome.
-- `python generate_user_script.py`
+- npm run generate_userscript
 - Add the generated `TTI-UserScript.js` as a user script.
 - Navigate to a site and keep an eye on devtools console.
 
