@@ -168,6 +168,7 @@ window._firstConsistentlyInteractiveDetector = (function() {
     _mutationObserverCallback(mutationRecord) {
       this._debugLog("Potentially network resource fetching mutation detected: ", mutationRecord);
       this._debugLog("Pushing back FirstConsistentlyInteractive check by 5 seconds.");
+      console.log("mutation record: ", mutationRecord);
       this.rescheduleTimer(performance.now() + 5000);
     }
 

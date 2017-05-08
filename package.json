@@ -1,0 +1,23 @@
+{
+  "name": "tti-polyfill",
+  "version": "1.0.0",
+  "description": "Polyfill for Time to Interactive. See https://goo.gl/OSmrPk",
+  "main": "None",
+  "scripts": {
+    "generate_polyfill": "mkdir -p gen && babili polyfillInit.js FirstConsistentlyInteractiveCore.js activityTrackerUtils.js FirstConsistentlyInteractiveDetector.js main.js > gen/ttci.js",
+    "generate_userscript": "npm run generate_polyfill && cat userscriptBeginning.js.txt gen/ttci.js userscriptEnding.js.txt > gen/TTI-Polyfill-UserScript.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deepanjanroy/tti-polyfill.git"
+  },
+  "author": "Deepanjan Roy (Google)",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/deepanjanroy/tti-polyfill/issues"
+  },
+  "homepage": "https://github.com/deepanjanroy/tti-polyfill#readme",
+  "devDependencies": {
+    "babili": "0.0.12"
+  }
+}

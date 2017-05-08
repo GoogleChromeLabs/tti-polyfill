@@ -1,7 +1,5 @@
 'use strict';
 
-// TODO: Have a better moduling system
-
 window._FirstConsistentlyInteractiveCore = (function() {
   function computeFirstConsistentlyInteractive(
       searchStart, minValue, lastKnownNetwork2Busy, currentTime, longTasks) {

@@ -15,7 +15,7 @@ console.log("Loading Time to Interactive Polyfill");
   const FirstConsistentlyInteractiveDetector =
         window._firstConsistentlyInteractiveDetector.FirstConsistentlyInteractiveDetector;
   const firstConsistentlyInteractiveDetector =
-        new FirstConsistentlyInteractiveDetector({debugMode: true});
+        new FirstConsistentlyInteractiveDetector({debugMode: false});
 
   if (document.readyState === "complete") {
     console.log("Document already sufficiently loaded. Scheduling FirstInteractive timer tasks.");

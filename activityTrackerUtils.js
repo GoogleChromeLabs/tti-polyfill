@@ -66,7 +66,7 @@ window._ActivityTrackerUtils = (function() {
     return false;
   }
 
-  function observeResourceFetchingMutations(callback, childListNodeCallback, attributeNodeCallback) {
+  function observeResourceFetchingMutations(callback) {
     const mutationObserver = new MutationObserver(function (mutations) {
       for (const mutation of mutations) {
         switch (mutation.type) {
