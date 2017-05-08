@@ -1,7 +1,7 @@
 'use strict';
 
 // TODO: Use a proper test runner.
-const {computeLastKnownNetwork2Busy, computeFirstConsistentlyInteractive} = window._FirstInteractiveCore;
+const {computeLastKnownNetwork2Busy, computeFirstConsistentlyInteractive} = window.__tti_modules.FirstConsistentlyInteractiveCore;
 
 function _toStartEndObjects(ranges) {
     const retObjects = [];

@@ -1,11 +1,9 @@
-'use strict';
+const ActivityTrackerUtils = window.__tti_modules.ActivityTrackerUtils;
+const FirstConsistentlyInteractiveCore = window.__tti_modules.FirstConsistentlyInteractiveCore;
 
-// TODO: Have a better moduling system
+window.__tti_modules.FirstConsistentlyInteractiveDetector = (function() {
+  'use strict';
 
-const ActivityTrackerUtils = window._ActivityTrackerUtils;
-const FirstConsistentlyInteractiveCore = window._FirstConsistentlyInteractiveCore;
-
-window._firstConsistentlyInteractiveDetector = (function() {
   class FirstConsistentlyInteractiveDetector {
     constructor(config) {
       this._debugMode = config.debugMode !== undefined ?
@@ -168,7 +166,6 @@ window._firstConsistentlyInteractiveDetector = (function() {
     _mutationObserverCallback(mutationRecord) {
       this._debugLog("Potentially network resource fetching mutation detected: ", mutationRecord);
       this._debugLog("Pushing back FirstConsistentlyInteractive check by 5 seconds.");
-      console.log("mutation record: ", mutationRecord);
       this.rescheduleTimer(performance.now() + 5000);
     }
 

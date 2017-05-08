@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-<script src="activityTrackerUtils.js"></script>
+<script src="../src/polyfillInit.js"></script>
+<script src="../src/activityTrackerUtils.js"></script>
 <style>
 </style>
 </head>
@@ -21,7 +22,7 @@ function assert(actual, expected) {
 }
 
 const observeResourceFetchingMutations =
-    window._ActivityTrackerUtils.observeResourceFetchingMutations;
+    window.__tti_modules.ActivityTrackerUtils.observeResourceFetchingMutations;
 
 const tests = [
   (function testAddingNestedImageTagFiresCallback() {
@@ -78,7 +79,6 @@ setTimeout(function runOneTest() {
   f();
   if (tests.length > 0) setTimeout(runOneTest, 50);
 }, 50);
-
 
 </script>
 </body>

@@ -1,6 +1,6 @@
-'use strict';
+window.__tti_modules.FirstConsistentlyInteractiveCore = (function() {
+  'use strict';
 
-window._FirstConsistentlyInteractiveCore = (function() {
   function computeFirstConsistentlyInteractive(
       searchStart, minValue, lastKnownNetwork2Busy, currentTime, longTasks) {
 

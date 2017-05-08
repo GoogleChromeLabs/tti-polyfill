@@ -1,33 +1,25 @@
 <!DOCTYPE html>
 <html>
 <head>
-<script src="firstConsistentlyInteractiveCore.js"></script>
-<!-- <script src="firstConsistentlyInteractiveCoreTest.js"></script> -->
-<script src="activityTrackerUtils.js"></script>
-<script src="firstConsistentlyInteractiveDetector.js"></script>
-<script src="snippet.js">
-<script async defer src="main.js"></script>
+  <script src="src/snippet.js"></script>
+  <script async defer src="gen/ttci.js"></script>
 
 <script>
-// notifyOfRequests((that) => {
-//      console.log("request starting", that);
-//      // setTimeout(() => {
-//      //   const resources = performance.getEntriesByType("resource");
-//      //   console.log("Resources", resources);
-//      // }, 5e3);
-//  },
-//                  (that) => console.log("request maybe starting", that));
 
-const url = "https://upload.wikimedia.org/wikipedia/commons/3/3f/Fronalpstock_big.jpg";
+  const url = "https://upload.wikimedia.org/wikipedia/commons/3/3f/Fronalpstock_big.jpg";
 
-// var oReq = new XMLHttpRequest();
-// oReq.addEventListener("load", () =>
-//   console.log("have response from load"));
-// oReq.open("GET", url);
-// oReq.send('test');
+  var oReq = new XMLHttpRequest();
+  oReq.addEventListener("load", () =>
+    console.log("have response from load"));
+  oReq.open("GET", url);
+  oReq.send('test');
 
-setTimeout(() => fetch(url).then((r) => console.log("have response")), 1000);
+  setTimeout(() => fetch(url).then((r) => console.log("have response")), 1000);
 
+  setTimeout(_ => {
+    const start = performance.now();
+    while (performance.now() < start + 60);
+  }, 1500);
 
 </script>
 <style>

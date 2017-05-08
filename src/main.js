@@ -1,21 +1,10 @@
-'use strict';
-
-console.log("Loading Time to Interactive Polyfill");
-
 (function() {
+  'use strict';
 
-  // Set a marker at around 1 second it is slightly easier in devtools timeline
-  // to see where FirstInteractive fired.
-  setTimeout(() => {
-    console.log("Setting a marker for 1 second");
-    console.timeStamp("Roughly 1s mark");
-  }, 1000);
-
-  console.log("document.readyState", document.readyState);
   const FirstConsistentlyInteractiveDetector =
-        window._firstConsistentlyInteractiveDetector.FirstConsistentlyInteractiveDetector;
+        window.__tti_modules.FirstConsistentlyInteractiveDetector.FirstConsistentlyInteractiveDetector;
   const firstConsistentlyInteractiveDetector =
-        new FirstConsistentlyInteractiveDetector({debugMode: false});
+        new FirstConsistentlyInteractiveDetector({debugMode: true});
 
   if (document.readyState === "complete") {
     console.log("Document already sufficiently loaded. Scheduling FirstInteractive timer tasks.");

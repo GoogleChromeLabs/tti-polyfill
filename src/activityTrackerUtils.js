@@ -1,8 +1,6 @@
-'use strict';
+window.__tti_modules.ActivityTrackerUtils = (function() {
+  'use strict';
 
-// TODO: Have a better moduling system
-
-window._ActivityTrackerUtils = (function() {
   class Counter {
     constructor() {
       this._count = 0;
