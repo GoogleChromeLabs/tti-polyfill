@@ -4,7 +4,8 @@
   "description": "Polyfill for Time to Interactive. See https://goo.gl/OSmrPk",
   "main": "None",
   "scripts": {
-    "generate_polyfill": "mkdir -p gen && babili src/polyfillInit.js src/FirstConsistentlyInteractiveCore.js src/activityTrackerUtils.js src/FirstConsistentlyInteractiveDetector.js src/main.js > gen/ttci.js",
+    "generate_polyfill": "mkdir -p gen && cat src/polyfillInit.js src/FirstConsistentlyInteractiveCore.js src/activityTrackerUtils.js src/FirstConsistentlyInteractiveDetector.js src/main.js > gen/ttci.js",
+    "generate_polyfill_minified": "mkdir -p gen && babili src/polyfillInit.js src/FirstConsistentlyInteractiveCore.js src/activityTrackerUtils.js src/FirstConsistentlyInteractiveDetector.js src/main.js > gen/ttci.min.js",
     "generate_userscript": "npm run generate_polyfill && cat userscript/userscriptBeginning.js.txt gen/ttci.js userscript/userscriptEnding.js.txt > gen/TTI-Polyfill-UserScript.js"
   },
   "repository": {
