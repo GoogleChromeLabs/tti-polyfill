@@ -1,9 +1,10 @@
-(function() {
-    if (window.PerformanceObserver) {
-        window.__tti_lts = [];
-        window.__tti_lto = new PerformanceObserver(function(entryList) {
-          window.__tti_lts.push(...entryList.getEntries());
-        });
-        window.__tti_lto.observe({entryTypes: ["longtask"]});
-    }
-})();
+!function() {
+if (window.PerformanceLongTaskTiming) {
+  var g = window.__tti = {e: []};
+  g.o = new PerformanceObserver(function(l){
+    console.log(l);
+    g.e=g.e.concat(l.getEntries())
+  });
+  g.o.observe({entryTypes:['longtask']});
+}
+}();

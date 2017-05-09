@@ -1,7 +1,4 @@
-'use strict';
-
-// TODO: Use a proper test runner.
-const {computeLastKnownNetwork2Busy, computeFirstConsistentlyInteractive} = window.__tti_modules.FirstConsistentlyInteractiveCore;
+import {computeLastKnownNetwork2Busy, computeFirstConsistentlyInteractive} from '../src/FirstConsistentlyInteractiveCore.js';
 
 function _toStartEndObjects(ranges) {
     const retObjects = [];
@@ -10,7 +7,6 @@ function _toStartEndObjects(ranges) {
     }
     return retObjects;
 }
-
 
 function testComputeLastKnownNetwork2Busy() {
   console.log("TestComputeLastKnownNetwork2Busy");
