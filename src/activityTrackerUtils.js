@@ -1,4 +1,4 @@
-class Counter {
+class CallCounter {
   constructor() {
     this._count = 0;
   }
@@ -9,7 +9,7 @@ class Counter {
   }
 }
 
-const requestCounter = new Counter();
+const requestCounter = new CallCounter();
 
 export function patchXMLHTTPRequest(beforeXHRSendCb, onRequestCompletedCb) {
   const send = XMLHttpRequest.prototype.send;
