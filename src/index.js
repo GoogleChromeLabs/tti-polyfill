@@ -1,6 +1,10 @@
 import FirstConsistentlyInteractiveDetector from './firstConsistentlyInteractiveDetector.js';
 
 export const getFirstConsistentlyInteractive = (opts) => {
-  const detector = new FirstConsistentlyInteractiveDetector(opts);
-  return detector.getFirstConsistentlyInteractive();
+  if (!window.PerformanceLongTaskTiming) {
+    return Promise.resolve(null);
+  } else {
+    const detector = new FirstConsistentlyInteractiveDetector(opts);
+    return detector.getFirstConsistentlyInteractive();
+  }
 };

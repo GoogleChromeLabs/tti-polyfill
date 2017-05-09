@@ -8,8 +8,8 @@ export default class FirstConsistentlyInteractiveDetector {
     this._useMutationObserver = config.useMutationObserver !== undefined ?
       config.useMutationObserver : true;
 
-    const snippetEntries = window.__tti.e;
-    const snippetObserver = window.__tti.o;
+    const snippetEntries = window.__tti && window.__tti.e;
+    const snippetObserver = window.__tti && window.__tti.o;
 
     // If we recorded some long tasks before this class was initialized,
     // consume them now.
@@ -204,9 +204,11 @@ export default class FirstConsistentlyInteractiveDetector {
     this._debugLog("Checking if First Consistently Interactive was reached...");
     const navigationStart = performance.timing.navigationStart;
     const lastBusy = FirstConsistentlyInteractiveCore.computeLastKnownNetwork2Busy(this._incompleteRequestStarts, this._networkRequests);
-    const firstPaint = chrome.loadTimes().firstPaintTime;
-    // If firstPaint is not set yet, searchStart is navigationStart.
-    const searchStart = firstPaint === 0 ? 0 : chrome.loadTimes().firstPaintTime * 1000 - navigationStart;
+
+    const firstPaint = window.chrome && window.chrome.loadTimes ?
+        (window.chrome.loadTimes().firstPaintTime * 1000 - navigationStart) : 0;
+    // First paint is not available in non-chrome browsers at the moment.
+    const searchStart = firstPaint || performance.timing.domContentLoadedEventEnd;
     const minValue = this._getMinValue();
     const currentTime = performance.now();
 
