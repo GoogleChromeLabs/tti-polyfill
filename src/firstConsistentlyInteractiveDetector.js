@@ -125,15 +125,14 @@ export default class FirstConsistentlyInteractiveDetector {
   }
 
   _registerPerformanceObserver() {
-    const firstConsistentlyInteractiveDetector = this;
-    this._performanceObserver = new PerformanceObserver(function(entryList) {
+    this._performanceObserver = new PerformanceObserver((entryList) => {
       var entries = entryList.getEntries();
       for (const entry of entries) {
         if (entry.entryType === 'resource') {
-          firstConsistentlyInteractiveDetector._networkRequestFinishedCallback(entry);
+          this._networkRequestFinishedCallback(entry);
         }
         if (entry.entryType === "longtask") {
-          firstConsistentlyInteractiveDetector._longTaskFinishedCallback(entry);
+          this._longTaskFinishedCallback(entry);
         }
       }
     });
@@ -224,7 +223,7 @@ export default class FirstConsistentlyInteractiveDetector {
     const firstPaint = window.chrome && window.chrome.loadTimes ?
         (window.chrome.loadTimes().firstPaintTime * 1000 - navigationStart) : 0;
     // First paint is not available in non-chrome browsers at the moment.
-    const searchStart = firstPaint || performance.timing.domContentLoadedEventEnd;
+    const searchStart = firstPaint || (performance.timing.domContentLoadedEventEnd - navigationStart);
     const minValue = this._getMinValue();
     const currentTime = performance.now();
 
