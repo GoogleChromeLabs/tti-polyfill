@@ -8,14 +8,17 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepanjanroy/tti-polyfill.git"
+    "url": "git+https://github.com/GoogleChrome/tti-polyfill.git"
   },
   "author": "Deepanjan Roy (Google)",
+  "contributors": [
+    "Philip Walton <philip@philipwalton.com> (https://philipwalton.com/)"
+  ],
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/deepanjanroy/tti-polyfill/issues"
+    "url": "https://github.com/GoogleChrome/tti-polyfill/issues"
   },
-  "homepage": "https://github.com/deepanjanroy/tti-polyfill#readme",
+  "homepage": "https://github.com/GoogleChrome/tti-polyfill#readme",
   "devDependencies": {
     "babel-plugin-external-helpers": "^6.22.0",
     "babel-preset-es2015": "^6.24.1",
