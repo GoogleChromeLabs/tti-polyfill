@@ -13,13 +13,14 @@
 // limitations under the License.
 
 
-!function() {
-if (window.PerformanceLongTaskTiming) {
-  var g = window.__tti = {e: []};
-  g.o = new PerformanceObserver(function(l){
-    console.log(l);
-    g.e=g.e.concat(l.getEntries())
-  });
-  g.o.observe({entryTypes:['longtask']});
-}
-}();
+import FirstConsistentlyInteractiveDetector from './firstConsistentlyInteractiveDetector.js';
+
+
+export const getFirstConsistentlyInteractive = (opts) => {
+  if (!window.PerformanceLongTaskTiming) {
+    return Promise.resolve(null);
+  } else {
+    const detector = new FirstConsistentlyInteractiveDetector(opts);
+    return detector.getFirstConsistentlyInteractive();
+  }
+};

@@ -13,13 +13,18 @@
 // limitations under the License.
 
 
-!function() {
-if (window.PerformanceLongTaskTiming) {
-  var g = window.__tti = {e: []};
-  g.o = new PerformanceObserver(function(l){
-    console.log(l);
-    g.e=g.e.concat(l.getEntries())
-  });
-  g.o.observe({entryTypes:['longtask']});
-}
-}();
+const {rollup} = require('rollup');
+const babel = require('rollup-plugin-babel');
+const uglify = require('rollup-plugin-uglify');
+
+export default {
+  entry: './src/index.js',
+  plugins: [
+    babel({
+      babelrc: false,
+      plugins: ['external-helpers'],
+      presets: [['es2015', {modules: false}]],
+    }),
+    uglify(),
+  ],
+};
