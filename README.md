@@ -1,48 +1,56 @@
 Time to Interactive Polyfill
 ============================
 
-Status: In development.
+A polyfill for the Time to Interactive metric. See the [metric definition](https://goo.gl/OSmrPk) for in-depth implementation details.
 
-# Usage
+## Installation
 
-```shell
-npm install
-npm run generate_polyfill
+You can install the TTI polyfill from npm by running:
+
+```sh
+npm install tti-polyfill
 ```
 
-This should produce `gen/ttci.js`.
+## Usage
 
-See `index.html` for how this should be used. You need to include a snippet very early in the page load (`src/snippet.js`), and the larger polyfill file (`gen/ttci.js`) should be async loaded.
+In your JavaScript code, import the module and invoke the `getFirstConsistentlyInteractive()` method. The `getFirstConsistentlyInteractive()` method returns a promise that resolves to the TTI metric value. If no TTI value can be found, or if the browser doesn't support all the APIs required to detect TTI, the promise resolves to `null`.
 
+```js
+import ttiPolyfill from './path/to/tti-polyfill.js';
 
-## Minified polyfill
-
-```shell
-npm run generate_polyfill_minified
+ttiPolyfill.getFirstConsistentlyInteractive(opts).then((tti) => {
+  // Use `tti` value in some way.
+});
 ```
 
-# Installing as a userscript
-If you to see TTCI values of different sites, it may be useful to install it as a userscript: 
+### Configuration options
 
-- Install a user script runner like [tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo?hl=en) on chrome.
-- npm run generate_userscript
-- Add the generated `TTI-UserScript.js` as a user script.
-- Navigate to a site and keep an eye on devtools console.
+The following table outlines the configuration options you can pass to the `getFirstConsistentlyInteractive()` method:
 
+<table>
+  <tr valign="top">
+    <th align="left">Name</th>
+    <th align="left">Type</th>
+    <th align="left">Description</th>
+  </tr>
+  <tr valign="top">
+    <td><code>minValue</code></td>
+    <td><code>number|null</code></td>
+    <td>
+      The lower bound to start forward-searching for the quite window. If no value is set, the default is after the <code>DOMContentLoaded</code> event.
+    </td>
+  </tr>
+  <tr valign="top">
+    <td><code>debugMode</code></td>
+    <td><code>boolean</code></td>
+    <td>
+      When <code>true</code>, progress message are printed to the console. This can be helpful in debugging.
+    </td>
+  </tr>
+</table>
 
-## Easier Usage if you don't want to change the code
+## Browser support
 
-- Install [tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo?hl=en).
-- Click on extension, then Dashboard, then Utilities.
-- Paste in `http://deepanjan.me/tti-polyfill/TTI-Polyfill-UserScript-Generated.js` in the URL box and click import to install script.
+The TTI polyfill will work in any browser that supports [`PerformanceObserver`](https://developer.mozilla.org/en-US/docs/Web/API/PerformanceObserver) and the [`PerformanceLongTaskTiming`](https://w3c.github.io/longtasks/) entry.
 
-This version may lag from the tip of tree.
-
-# Console output
-
-By default, right now the polyfill is very verbose about what it's doing. You
-should eventually see something along the lines of `First interactive found:
-$timestamp`. The `$timestamp` is number of miliseconds since navigationStart.
-
-If you want to turn off the chattiness, pass in `{debugMode: false}` in the
-`FirstInteractiveDetector` constructor (which is called in `main.js`).
+At the moment this is Chrome 58+.
