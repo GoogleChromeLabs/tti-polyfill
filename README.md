@@ -13,7 +13,11 @@ npm install tti-polyfill
 
 ## Usage
 
-In your JavaScript code, import the module and invoke the `getFirstConsistentlyInteractive()` method. The `getFirstConsistentlyInteractive()` method returns a promise that resolves to the TTI metric value. If no TTI value can be found, or if the browser doesn't support all the APIs required to detect TTI, the promise resolves to `null`.
+Adding the TTI polyfill is a two-step process. First you need to add a snippet of code to the head of your document (before any other scripts run). This snippet creates a `PerformanceObserver` instance and starts observing `longtask` entry types.
+
+*__Note:__ this snippet is a temporary workaround, until browsers implement level 2 of the spec and include the [`buffered`](https://w3c.github.io/performance-timeline/#dom-performanceobserverinit-buffered) flag.*
+
+The second step is to import the module into your application code and invoke the `getFirstConsistentlyInteractive()` method. The `getFirstConsistentlyInteractive()` method returns a promise that resolves to the TTI metric value (in milliseconds since navigation start). If no TTI value can be found, or if the browser doesn't support all the APIs required to detect TTI, the promise resolves to `null`.
 
 ```js
 import ttiPolyfill from './path/to/tti-polyfill.js';
@@ -22,6 +26,8 @@ ttiPolyfill.getFirstConsistentlyInteractive(opts).then((tti) => {
   // Use `tti` value in some way.
 });
 ```
+
+Note that this method can be invoked at any time, it does not need to be called prior to interactivity being reached. This allows you to load the polyfill via `<script async>`, so it doesn't block any other critical resources.
 
 ### Configuration options
 
