@@ -15,7 +15,15 @@ npm install tti-polyfill
 
 Adding the TTI polyfill is a two-step process. First you need to add a snippet of code to the head of your document (before any other scripts run). This snippet creates a `PerformanceObserver` instance and starts observing `longtask` entry types.
 
-*__Note:__ this snippet is a temporary workaround, until browsers implement level 2 of the spec and include the [`buffered`](https://w3c.github.io/performance-timeline/#dom-performanceobserverinit-buffered) flag.*
+```html
+<script>
+!function(){if(window.PerformanceLongTaskTiming){var g=window.__tti={e:[]};
+g.o=new PerformanceObserver(function(l){g.e=g.e.concat(l.getEntries())});
+g.o.observe({entryTypes:['longtask']})}}();
+</script>
+```
+
+*__Note:__ this snippet is a temporary workaround, until browsers implement level 2 of the Performance Observer spec and include the [`buffered`](https://w3c.github.io/performance-timeline/#dom-performanceobserverinit-buffered) flag.*
 
 The second step is to import the module into your application code and invoke the `getFirstConsistentlyInteractive()` method. The `getFirstConsistentlyInteractive()` method returns a promise that resolves to the TTI metric value (in milliseconds since navigation start). If no TTI value can be found, or if the browser doesn't support all the APIs required to detect TTI, the promise resolves to `null`.
 
