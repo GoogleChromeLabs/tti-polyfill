@@ -43,7 +43,6 @@ export function patchFetch(beforeRequestCb, afterRequestCb){
   const originalFetch = fetch;
   fetch = function() {
     return new Promise((resolve, reject) => {
-      console.log("New fetch running");
       const requestId = requestCounter.next();
       beforeRequestCb(requestId);
       originalFetch.apply(this, arguments).then(
