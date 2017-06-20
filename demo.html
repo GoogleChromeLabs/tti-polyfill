@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="src/snippet.js"></script>
+  <script>
+  const url = 'https://upload.wikimedia.org' +
+      '/wikipedia/commons/3/3f/Fronalpstock_big.jpg';
+
+  var oReq = new XMLHttpRequest();
+  oReq.addEventListener('load', () => console.log('window loaded'));
+  oReq.open('GET', url);
+  oReq.send('test');
+
+  setTimeout(() => fetch(url), 1000);
+
+  setTimeout(() => {
+    const start = performance.now();
+    while (performance.now() < start + 60);
+  }, 1500);
+  </script>
+<style>
+</style>
+</head>
+<body>
+  <script src="tti-polyfill-debug.js"></script>
+  <script>
+  ttiPolyfill.getFirstConsistentlyInteractive().then(console.log);
+  </script>
+</body>
+</html>
