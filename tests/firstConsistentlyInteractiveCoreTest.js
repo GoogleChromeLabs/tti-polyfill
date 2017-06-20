@@ -21,35 +21,34 @@ import {computeLastKnownNetwork2Busy, computeFirstConsistentlyInteractive}
 
 
 function testComputeLastKnownNetwork2Busy() {
+  const startTime = performance.now();
+
   console.log('TestComputeLastKnownNetwork2Busy');
 
   // Never network busy.
-  console.assert(computeLastKnownNetwork2Busy([], [], 42) === 0);
+  console.assert(computeLastKnownNetwork2Busy([], []) === 0);
 
   // Too many incomplete requests.
-  console.assert(computeLastKnownNetwork2Busy([10, 20, 30], [], 42) === 42);
+  console.assert(computeLastKnownNetwork2Busy([10, 20, 30], []) >= startTime);
 
   // Almost too many incomplete requests, but not quite.
-  console.assert(computeLastKnownNetwork2Busy([10, 20], [], 42) === 0);
+  console.assert(computeLastKnownNetwork2Busy([10, 20], []) === 0);
 
   // Network quiet at the end of an observed resource request.
   console.assert(computeLastKnownNetwork2Busy(
-      [10, 20], [{start: 0, end: 50}], 100) === 50);
+      [10, 20], [{start: 0, end: 50}]) === 50);
 
   // No incomplete requests.
-  console.assert(computeLastKnownNetwork2Busy([],
-      [{start: 0, end: 100}, {start: 0, end: 50}, {start: 25, end: 75}], 100)
-          === 50);
+  console.assert(computeLastKnownNetwork2Busy([], [{start: 0, end: 100},
+      {start: 0, end: 50}, {start: 25, end: 75}]) === 50);
 
   // Complex layout of observed resource requests.
-  console.assert(computeLastKnownNetwork2Busy(
-      [3], [[0, 5], [0, 10], [11, 20], [21, 30]], 100)
-          === 5);
+  console.assert(computeLastKnownNetwork2Busy([3], [{start: 0, end: 5},
+      {start: 0, end: 10}, {start: 11, end: 20}, {start: 21, end: 30}]) === 5);
 
   // Network quiet is between two incomplete request starts.
   console.assert(computeLastKnownNetwork2Busy(
-      [10, 90], [[20, 50], [30, 60]], 100)
-          === 50);
+      [10, 90], [{start: 20, end: 50}, {start: 30, end: 60}]) === 50);
 
   console.log('Ran all tests.');
 }
@@ -58,45 +57,40 @@ function testComputeFirstConsistentlyInteractive() {
   console.log('testComputeFirstConsistentlyInteractive');
 
   // If we have not had a long enough network 2-quiet period, FCI is null.
-  console.assert(computeFirstConsistentlyInteractive(500, 3000, 1000, 5999, [])
-      === null);
+  console.assert(computeFirstConsistentlyInteractive(
+      500, 3000, 1000, 5999, []) === null);
 
   // If we have not had a long enough main thread quiet period, FCI is null.
   console.assert(computeFirstConsistentlyInteractive(
-      500, 500, 1000, 6001, [{start: 4000, end: 4060}])
-          === null);
+      500, 500, 1000, 6001, [{start: 4000, end: 4060}]) === null);
 
   // If we have not had a long enough window since searchStart, FCI is null.
-  console.assert(computeFirstConsistentlyInteractive(3000, 500, 1000, 6001, [])
-      === null);
+  console.assert(computeFirstConsistentlyInteractive(
+      3000, 500, 1000, 6001, []) === null);
 
   // If there is no long task, FCI is searchStart.
-  console.assert(
-      computeFirstConsistentlyInteractive(4000, 3000, 1000, 10000, [])
-          === 4000);
+  console.assert(computeFirstConsistentlyInteractive(
+      4000, 3000, 1000, 10000, []) === 4000);
 
   // searchStart can be before network quiet
-  console.assert(computeFirstConsistentlyInteractive(750, 500, 1000, 6001, [])
-      === 750);
+  console.assert(computeFirstConsistentlyInteractive(
+      750, 500, 1000, 6001, []) === 750);
 
   // minValue can be before network quiet.
-  console.assert(computeFirstConsistentlyInteractive(300, 500, 1000, 6001, [])
-      === 500);
+  console.assert(computeFirstConsistentlyInteractive(
+      300, 500, 1000, 6001, []) === 500);
 
   // FCI does not fire before minValue.
   console.assert(computeFirstConsistentlyInteractive(500, 4000, 1000, 10000,
-      [{start: 2000, end: 2200}, {start: 2500, end: 2570}])
-          === 4000);
+      [{start: 2000, end: 2200}, {start: 2500, end: 2570}]) === 4000);
 
   // FCI is the end of last long task.
   console.assert(computeFirstConsistentlyInteractive(1500, 2000, 1000, 10000,
-      [{start: 2000, end: 2200}, {start: 2500, end: 2570}])
-          === 2570);
+      [{start: 2000, end: 2200}, {start: 2500, end: 2570}]) === 2570);
 
   // FCI looks back from network quiet.
   console.assert(computeFirstConsistentlyInteractive(500, 2000, 1000, 17000,
-      [{start: 2000, end: 2200}, {start: 10000, end: 10070}])
-          === 10070);
+      [{start: 2000, end: 2200}, {start: 10000, end: 10070}]) === 10070);
 
   console.log('Ran all tests.');
 }

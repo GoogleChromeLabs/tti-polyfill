@@ -361,16 +361,16 @@ export default class FirstConsistentlyInteractiveDetector {
       this.rescheduleTimer(Math.max(lastBusy + 5000, currentTime + 1000));
     }
 
-    log(`Parameter values: `);
-    log(`NavigationStart ${navigationStart}`);
-    log(`lastKnownNetwork2Busy ${lastBusy}`);
-    log(`Search Start ${searchStart}`);
-    log(`Min Value ${minValue}`);
-    log(`Last busy ${lastBusy}`);
-    log(`Current time ${currentTime}`);
-    log(`Long tasks ${this._longTasks}`);
-    log(`Incomplete JS Request Start Times ${this._incompleteRequestStarts}`);
-    log(`Network requests ${this._networkRequests}`);
+    log(`Parameter values:`);
+    log(`NavigationStart`, navigationStart);
+    log(`lastKnownNetwork2Busy`, lastBusy);
+    log(`Search Start`, searchStart);
+    log(`Min Value`, minValue);
+    log(`Last busy`, lastBusy);
+    log(`Current time`, currentTime);
+    log(`Long tasks`, this._longTasks);
+    log(`Incomplete JS Request Start Times`, this._incompleteRequestStarts);
+    log(`Network requests`, this._networkRequests);
 
     const maybeFCI =
         firstConsistentlyInteractiveCore.computeFirstConsistentlyInteractive(
