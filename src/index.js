@@ -28,10 +28,10 @@ import FirstConsistentlyInteractiveDetector
  *     a new version of closure compiler.
  */
 export const getFirstConsistentlyInteractive = (opts = {}) => {
-  if (!window.PerformanceLongTaskTiming) {
-    return Promise.resolve(null);
-  } else {
+  if ('PerformanceLongTaskTiming' in window) {
     const detector = new FirstConsistentlyInteractiveDetector(opts);
     return detector.getFirstConsistentlyInteractive();
+  } else {
+    return Promise.resolve(null);
   }
 };

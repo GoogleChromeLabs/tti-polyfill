@@ -17,9 +17,9 @@
 
 
 // UMD globals
-let define;
+var define;
 define.amd;
-let module;
+var module;
 module.exports;
 
 
@@ -39,7 +39,7 @@ window.__tti.e;
  *   useMutationObserver: (boolean|undefined),
  * }}
  */
-let FirstConsistentlyInteractiveDetectorInit;
+var FirstConsistentlyInteractiveDetectorInit;
 
 
 /**
@@ -49,27 +49,23 @@ function PerformanceObserverEntry() {}
 
 
 /**
- * Callback for the PerformanceObserver.
- * @typedef {function(!Performance, !PerformanceObserver)}
- */
-let PerformanceObserverCallback;
-
-/**
  * Options for the PerformanceObserver.
  * @typedef {{
  *   entryTypes: (Array<string>),
  * }}
  */
-let PerformanceObserverInit;
+var PerformanceObserverInit;
+
 
 /**
- * @param {!PerformanceObserverCallback} handler The callback for the observer.
+ * @param {!function(!Performance, !PerformanceObserver)} callback
  * @constructor
  */
-function PerformanceObserver(handler) {}
+function PerformanceObserver(callback) {}
+
 
 /**
- * @param {PerformanceObserverInit} options
+ * @param {!PerformanceObserverInit} options
  */
 PerformanceObserver.prototype.observe = function(options) {};
 
@@ -80,4 +76,4 @@ PerformanceObserver.prototype.disconnect = function() {};
 /**
  * @constructor
  */
-let PerformanceLongTaskTiming;
+function PerformanceLongTaskTiming() {}

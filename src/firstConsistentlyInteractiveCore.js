@@ -45,7 +45,7 @@ export const computeFirstConsistentlyInteractive =
  * @return {number}
  */
 export const computeLastKnownNetwork2Busy =
-    (incompleteRequestStarts, observedResourceRequests) => {
+      (incompleteRequestStarts, observedResourceRequests) => {
   if (incompleteRequestStarts.length > 2) return performance.now();
 
   const endpoints = [];
