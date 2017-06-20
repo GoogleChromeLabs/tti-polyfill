@@ -13,27 +13,45 @@
 // limitations under the License.
 
 
-import * as ActivityTrackerUtils from './activityTrackerUtils.js';
-import * as FirstConsistentlyInteractiveCore from './firstConsistentlyInteractiveCore.js';
+/* global PerformanceObserver */
 
 
+import * as activityTrackerUtils from './activityTrackerUtils.js';
+import {log} from './debug.js';
+import * as firstConsistentlyInteractiveCore
+    from './firstConsistentlyInteractiveCore.js';
+
+
+/**
+ * Class to detect first consistently interactive.
+ */
 export default class FirstConsistentlyInteractiveDetector {
+  /**
+   * @param {!FirstConsistentlyInteractiveDetectorInit=} config
+   */
   constructor(config = {}) {
-    this._debugMode = config.debugMode !== undefined ?
-      config.debugMode : false;
-    this._useMutationObserver = config.useMutationObserver !== undefined ?
-      config.useMutationObserver : true;
+    this._useMutationObserver = !!config.useMutationObserver;
 
+    // If minValue is null, by default it is DOMContentLoadedEnd.
+    this._minValue = config.minValue || null;
+
+    /** @type {Array<PerformanceEntry>|undefined} */
     const snippetEntries = window.__tti && window.__tti.e;
+
+    /** @type {PerformanceObserver|undefined} */
     const snippetObserver = window.__tti && window.__tti.o;
 
     // If we recorded some long tasks before this class was initialized,
     // consume them now.
     if (snippetEntries) {
-      this._debugLog("Consuming the long task entries already recorded.");
-      this._longTasks = snippetEntries.map(performanceEntry =>
-          ({start: performanceEntry.startTime,
-           end: performanceEntry.startTime + performanceEntry.duration}));
+      log(`Consuming the long task entries already recorded.`);
+
+      this._longTasks = snippetEntries.map((performanceEntry) => {
+        return {
+          start: performanceEntry.startTime,
+          end: performanceEntry.startTime + performanceEntry.duration,
+        };
+      });
     } else {
       this._longTasks = [];
     }
@@ -54,17 +72,28 @@ export default class FirstConsistentlyInteractiveDetector {
     // Timer tasks are only scheduled when detector is enabled.
     this._scheduleTimerTasks = false;
 
-    // If minValue is null, by default it is DOMContentLoadedEnd.
-    this._minValue = config.minValue || null;
+    /** @type {?Function} */
+    this._firstConsistentlyInteractiveResolver = null;
+
+    /** @type {?PerformanceObserver} */
+    this._performanceObserver = null;
+
+    /** @type {?MutationObserver} */
+    this._mutationObserver = null;
 
     this._registerListeners();
   }
 
+  /**
+   * Starts checking for a first consistently interactive time and returns a
+   * promise that resolves to the found time.
+   * @return {!Promise<number>}
+   */
   getFirstConsistentlyInteractive() {
     return new Promise((resolve, reject) => {
       this._firstConsistentlyInteractiveResolver = resolve;
 
-      if (document.readyState == "complete") {
+      if (document.readyState == 'complete') {
         this.startSchedulingTimerTasks();
       } else {
         window.addEventListener('load', () => {
@@ -74,86 +103,124 @@ export default class FirstConsistentlyInteractiveDetector {
           this.startSchedulingTimerTasks();
         });
       }
-    })
+    });
   }
 
+  /**
+   * Starts scheduling the timer that checks for network quiescence (a 5-second
+   * window of no more than 2 in-flight network requests).
+   */
   startSchedulingTimerTasks() {
-    this._debugLog("Enabling FirstConsistentlyInteractiveDetector");
+    log(`Enabling FirstConsistentlyInteractiveDetector`);
+
     this._scheduleTimerTasks = true;
+
     const lastLongTaskEnd = this._longTasks.length > 0 ?
-          this._longTasks[this._longTasks.length - 1].end : 0;
-    const lastKnownNetwork2Busy = FirstConsistentlyInteractiveCore.computeLastKnownNetwork2Busy(this._incompleteRequestStarts, this._networkRequests);
-    this.rescheduleTimer(Math.max(lastKnownNetwork2Busy + 5000, lastLongTaskEnd));
+        this._longTasks[this._longTasks.length - 1].end : 0;
+
+    const lastKnownNetwork2Busy =
+        firstConsistentlyInteractiveCore.computeLastKnownNetwork2Busy(
+            this._incompleteRequestStarts, this._networkRequests);
+
+    this.rescheduleTimer(
+        Math.max(lastKnownNetwork2Busy + 5000, lastLongTaskEnd));
   }
 
+  /**
+   * Setter for the `_minValue` property.
+   * @param {number} minValue
+   */
   setMinValue(minValue) {
     this._minValue = minValue;
   }
 
-  // earlistTime is a timestamp in ms, and the time is relative to navigationStart.
+  /**
+   * Resets the timer that checks for network quiescence.
+   * @param {number} earliestTime A timestamp in ms, and the time is relative
+   *     to navigationStart.
+   */
   rescheduleTimer(earliestTime) {
     // Check if ready to start looking for firstConsistentlyInteractive
     if (!this._scheduleTimerTasks) {
-      this._debugLog("startSchedulingTimerTasks must be called before calling rescheduleTimer");
+      log(`startSchedulingTimerTasks must be called before ` +
+          `calling rescheduleTimer`);
+
       return;
     }
 
-    this._debugLog("Attempting to reschedule FirstConsistentlyInteractive check to ", earliestTime);
-    this._debugLog("Previous timer activation time: ", this._timerActivationTime);
+    log(`Attempting to reschedule FirstConsistentlyInteractive ` +
+        `check to ${earliestTime}`);
+    log(`Previous timer activation time: ${this._timerActivationTime}`);
 
     if (this._timerActivationTime > earliestTime) {
-      this._debugLog("Current activation time is greater than attempted reschedule time. No need to postpone.");
+      log(`Current activation time is greater than attempted ` +
+          `reschedule time. No need to postpone.`);
+
       return;
     }
     clearTimeout(this._timerId);
-    this._timerId = setTimeout(() => this._checkTTI(), earliestTime - performance.now());
+    this._timerId = setTimeout(() => {
+      this._checkTTI();
+    }, earliestTime - performance.now());
     this._timerActivationTime = earliestTime;
-    this._debugLog("Rescheduled firstConsistentlyInteractive check at ", earliestTime);
+
+    log(`Rescheduled firstConsistentlyInteractive check at ${earliestTime}`);
   }
 
+  /**
+   * Removes all timers and event listeners.
+   */
   disable() {
-    this._debugLog("Disabling FirstConsistentlyInteractiveDetector");
+    log(`Disabling FirstConsistentlyInteractiveDetector`);
+
     clearTimeout(this._timerId);
     this._scheduleTimerTasks = false;
     this._unregisterListeners();
   }
 
-  _debugLog() {
-    if (this._debugMode) {
-      console.log(...arguments);
-    }
-  }
-
+  /**
+   * Adds
+   */
   _registerPerformanceObserver() {
     this._performanceObserver = new PerformanceObserver((entryList) => {
-      var entries = entryList.getEntries();
+      const entries = entryList.getEntries();
       for (const entry of entries) {
         if (entry.entryType === 'resource') {
           this._networkRequestFinishedCallback(entry);
         }
-        if (entry.entryType === "longtask") {
+        if (entry.entryType === 'longtask') {
           this._longTaskFinishedCallback(entry);
         }
       }
     });
-    this._performanceObserver.observe({entryTypes: ["longtask", "resource"]});
+    this._performanceObserver.observe({entryTypes: ['longtask', 'resource']});
   }
 
-  _registerMutationObserver() {
-    this._mutationObserver =
-      ActivityTrackerUtils.observeResourceFetchingMutations(
-        this._mutationObserverCallback.bind(this));
-  }
-
+  /**
+   * Registers listeners to detect XHR, fetch, resource timing entries, and
+   * DOM mutations to detect long tasks and network quiescence.
+   */
   _registerListeners() {
-    ActivityTrackerUtils.patchXMLHTTPRequest(this._beforeJSInitiatedRequestCallback.bind(this),
-                        this._afterJSInitiatedRequestCallback.bind(this));
-    ActivityTrackerUtils.patchFetch(this._beforeJSInitiatedRequestCallback.bind(this),
-               this._afterJSInitiatedRequestCallback.bind(this));
+    activityTrackerUtils.patchXMLHTTPRequest(
+        this._beforeJSInitiatedRequestCallback.bind(this),
+        this._afterJSInitiatedRequestCallback.bind(this));
+
+    activityTrackerUtils.patchFetch(
+        this._beforeJSInitiatedRequestCallback.bind(this),
+        this._afterJSInitiatedRequestCallback.bind(this));
+
     this._registerPerformanceObserver();
-    if (this._useMutationObserver) this._registerMutationObserver();
+
+    if (this._useMutationObserver) {
+      this._mutationObserver =
+          activityTrackerUtils.observeResourceFetchingMutations(
+              this._mutationObserverCallback.bind(this));
+    }
   }
 
+  /**
+   * Removes all added listeners.
+   */
   _unregisterListeners() {
     // We will leave the XHR / Fetch objects the way they were,
     // since we cannot guarantee they were not modified further in between.
@@ -162,103 +229,166 @@ export default class FirstConsistentlyInteractiveDetector {
     if (this._mutationObserver) this._mutationObserver.disconnect();
   }
 
+  /**
+   * A callback to be run before any new XHR requests. This adds the request
+   * to a map so in-flight requests can be tracked.
+   * @param {string} requestId
+   */
   _beforeJSInitiatedRequestCallback(requestId) {
-    this._debugLog("Starting JS initiated request. Request ID: ", requestId);
-    this._incompleteJSInitiatedRequestStartTimes.set(requestId, performance.now());
-    this._debugLog("Active XHRs: ", this._incompleteJSInitiatedRequestStartTimes.size);
+    log(`Starting JS initiated request. Request ID: ${requestId}`);
+
+    this._incompleteJSInitiatedRequestStartTimes.set(
+        requestId, performance.now());
+
+    log(`Active XHRs: ${this._incompleteJSInitiatedRequestStartTimes.size}`);
   }
 
+  /**
+   * A callback to be run once any XHR requests have completed. This removes
+   * the request from the in-flight request map.
+   * @param {string} requestId
+   */
   _afterJSInitiatedRequestCallback(requestId) {
-    this._debugLog("Completed JS initiated request with request ID: ", requestId);
+    log(`Completed JS initiated request with request ID: ${requestId}`);
+
     this._incompleteJSInitiatedRequestStartTimes.delete(requestId);
-    this._debugLog("Active XHRs: ", this._incompleteJSInitiatedRequestStartTimes.size);
+
+    log(`Active XHRs: ${this._incompleteJSInitiatedRequestStartTimes.size}`);
   }
 
+  /**
+   * A callback to be run once new resource timing entries are observed.
+   * This adds the entry to an array and resets the timeout detecting the
+   * quiet window.
+   * @param {PerformanceEntry} performanceEntry
+   */
   _networkRequestFinishedCallback(performanceEntry) {
-    this._debugLog("Network request finished: ", performanceEntry);
+    log(`Network request finished`, performanceEntry);
+
     this._networkRequests.push({
       start: performanceEntry.fetchStart,
-      end: performanceEntry.responseEnd
+      end: performanceEntry.responseEnd,
     });
     this.rescheduleTimer(
-      FirstConsistentlyInteractiveCore.computeLastKnownNetwork2Busy(this._incompleteRequestStarts, this._networkRequests) + 5000);
+        firstConsistentlyInteractiveCore.computeLastKnownNetwork2Busy(
+            this._incompleteRequestStarts, this._networkRequests) + 5000);
   }
 
+  /**
+   * A callback to be run once new long tasks are observed. This resets the
+   * timeout detecting the quiet window.
+   * @param {PerformanceEntry} performanceEntry
+   */
   _longTaskFinishedCallback(performanceEntry) {
-    this._debugLog("Long task finished: ", performanceEntry);
+    log(`Long task finished`, performanceEntry);
+
     const taskEndTime = performanceEntry.startTime +
           performanceEntry.duration;
     this._longTasks.push({
       start: performanceEntry.startTime,
-      end: taskEndTime
+      end: taskEndTime,
     });
     this.rescheduleTimer(taskEndTime + 5000);
   }
 
+  /**
+   * A callback to be run once any DOM elements are added that would initiate
+   * a new network request. This resets the timeout detecting the quiet window.
+   * @param {!MutationRecord} mutationRecord
+   */
   _mutationObserverCallback(mutationRecord) {
-    this._debugLog("Potentially network resource fetching mutation detected: ", mutationRecord);
-    this._debugLog("Pushing back FirstConsistentlyInteractive check by 5 seconds.");
+    log(`Potentially network resource fetching mutation detected`,
+        mutationRecord);
+
+    log(`Pushing back FirstConsistentlyInteractive check by 5 seconds.`);
+
     this.rescheduleTimer(performance.now() + 5000);
   }
 
+  /**
+   * Returns either a manually set min value or the time since
+   * domContentLoadedEventEnd and navigationStart. If the
+   * domContentLoadedEventEnd data isn't available, `null` is returned.
+   * @return {number|null}
+   */
   _getMinValue() {
     if (this._minValue) return this._minValue;
 
     if (performance.timing.domContentLoadedEventEnd) {
-      return performance.timing.domContentLoadedEventEnd - performance.timing.navigationStart;
+      const {domContentLoadedEventEnd, navigationStart} = performance.timing;
+      return domContentLoadedEventEnd - navigationStart;
     }
 
     return null;
   }
 
+  /**
+   * Gets a list of all in-flight requests.
+   * @return {!Array}
+   */
   get _incompleteRequestStarts() {
     return [...this._incompleteJSInitiatedRequestStartTimes.values()];
   }
 
+  /**
+   * Checks to see if a first consistently interactive time has been found.
+   * If one has been found, the promise resolver is invoked with the time. If
+   * no time has been found, the timeout detecting the quiet window is reset.
+   */
   _checkTTI() {
-    this._debugLog("Checking if First Consistently Interactive was reached...");
-    const navigationStart = performance.timing.navigationStart;
-    const lastBusy = FirstConsistentlyInteractiveCore.computeLastKnownNetwork2Busy(this._incompleteRequestStarts, this._networkRequests);
+    log(`Checking if First Consistently Interactive was reached...`);
 
+    const navigationStart = performance.timing.navigationStart;
+    const lastBusy =
+        firstConsistentlyInteractiveCore.computeLastKnownNetwork2Busy(
+            this._incompleteRequestStarts, this._networkRequests);
+
+    // First paint is not available in non-chrome browsers at the moment.
     const firstPaint = window.chrome && window.chrome.loadTimes ?
         (window.chrome.loadTimes().firstPaintTime * 1000 - navigationStart) : 0;
-    // First paint is not available in non-chrome browsers at the moment.
-    const searchStart = firstPaint || (performance.timing.domContentLoadedEventEnd - navigationStart);
+
+    const searchStart = firstPaint || (
+        performance.timing.domContentLoadedEventEnd - navigationStart);
+
     const minValue = this._getMinValue();
     const currentTime = performance.now();
 
     // Ideally we will only start scheduling timers after DOMContentLoaded and
     // this case should never be hit.
     if (minValue === null) {
-      this._debugLog("No usable minimum value yet. Postponing check.");
-      this.rescheduleTimer(Math.max(lastBusy + 5000, performance.now() + 1000));
+      log(`No usable minimum value yet. Postponing check.`);
+
+      this.rescheduleTimer(Math.max(lastBusy + 5000, currentTime + 1000));
     }
 
-    this._debugLog("Parameter values: ");
-    this._debugLog("NavigationStart: ", navigationStart);
-    this._debugLog("lastKnownNetwork2Busy: ", lastBusy);
-    this._debugLog("Search Start: ", searchStart);
-    this._debugLog("Min Value: ", minValue);
-    this._debugLog("Last busy: ", lastBusy);
-    this._debugLog("Current time: ", currentTime);
-    this._debugLog("Long tasks: ", this._longTasks);
-    this._debugLog("Incomplete JS Request Start Times: ", this._incompleteRequestStarts);
-    this._debugLog("Network requests: ", this._networkRequests);
+    log(`Parameter values: `);
+    log(`NavigationStart ${navigationStart}`);
+    log(`lastKnownNetwork2Busy ${lastBusy}`);
+    log(`Search Start ${searchStart}`);
+    log(`Min Value ${minValue}`);
+    log(`Last busy ${lastBusy}`);
+    log(`Current time ${currentTime}`);
+    log(`Long tasks ${this._longTasks}`);
+    log(`Incomplete JS Request Start Times ${this._incompleteRequestStarts}`);
+    log(`Network requests ${this._networkRequests}`);
 
-
-    const maybeFCI = FirstConsistentlyInteractiveCore.computeFirstConsistentlyInteractive(
-        searchStart, minValue, lastBusy, currentTime, this._longTasks);
+    const maybeFCI =
+        firstConsistentlyInteractiveCore.computeFirstConsistentlyInteractive(
+            searchStart, /** @type {number} */ (minValue), lastBusy,
+            currentTime, this._longTasks);
 
     if (maybeFCI) {
-      this._firstConsistentlyInteractiveResolver(maybeFCI);
+      this._firstConsistentlyInteractiveResolver(
+          /** @type {number} */ (maybeFCI));
       this.disable();
     }
 
-    // First Consistently Interactive was not reached for whatever reasons. Check again in
-    // one second.
-    // Eventually we should become confident enough in our scheduler logic to
-    // get rid of this step.
-    this._debugLog("Could not detect First Consistently Interactive. Retrying in 1 second.");
+    // First Consistently Interactive was not reached for whatever reasons.
+    // Check again in one second. Eventually we should become confident enough
+    // in our scheduler logic to get rid of this step.
+    log(`Could not detect First Consistently Interactive. ` +
+        `Retrying in 1 second.`);
+
     this.rescheduleTimer(performance.now() + 1000);
   }
 }

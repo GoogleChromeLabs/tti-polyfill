@@ -13,94 +13,113 @@
 // limitations under the License.
 
 
-class CallCounter {
-  constructor() {
-    this._count = 0;
-  }
+let uniqueId = 0;
 
-  next() {
-    this._count++;
-    return this._count;
-  }
-}
 
-const requestCounter = new CallCounter();
-
+/**
+ * Overrides the native XHR send method in order to keep track of in-flight
+ * network requests.
+ * @param {!Function} beforeXHRSendCb
+ * @param {!Function} onRequestCompletedCb
+ */
 export function patchXMLHTTPRequest(beforeXHRSendCb, onRequestCompletedCb) {
   const send = XMLHttpRequest.prototype.send;
-  const requestId = requestCounter.next();
-  XMLHttpRequest.prototype.send = function() {
+  const requestId = uniqueId++;
+
+  XMLHttpRequest.prototype.send = function(...args) { // No arrow function.
     beforeXHRSendCb(requestId);
-    this.addEventListener('readystatechange', e => {
+    this.addEventListener('readystatechange', () => {
       // readyState 4 corresponds to 'DONE'
       if (this.readyState === 4) onRequestCompletedCb(requestId);
     });
-    return send.apply(this, arguments);
+    return send.apply(this, args);
   };
 }
 
-export function patchFetch(beforeRequestCb, afterRequestCb){
+
+/**
+ * Overrides the native fetch() in order to keep track of in-flight network
+ * requests.
+ * @param {!Function} beforeRequestCb
+ * @param {!Function} afterRequestCb
+ */
+export function patchFetch(beforeRequestCb, afterRequestCb) {
   const originalFetch = fetch;
-  fetch = function() {
+
+  // TODO(philipwalton): assign this to a property of the global variable
+  // explicitely rather than implicitely.
+  // eslint-disable-next-line no-global-assign
+  fetch = (...args) => {
     return new Promise((resolve, reject) => {
-      const requestId = requestCounter.next();
+      const requestId = uniqueId++;
       beforeRequestCb(requestId);
-      originalFetch.apply(this, arguments).then(
-        value => {
-          afterRequestCb(requestId);
-          resolve(value);
-        },
-        e => {
-          afterRequestCb(e);
-          reject(e);
-        }
-      );
+      originalFetch(...args).then(
+          (value) => {
+            afterRequestCb(requestId);
+            resolve(value);
+          },
+          (err) => {
+            afterRequestCb(err);
+            reject(err);
+          });
     });
   };
 }
 
-const _nodeTypesFetchingNetworkResources = ["img", "script", "iframe", "link", "audio", "video", "source"];
 
-function _descendentContainsNodeType(nodeTypes, nodes) {
+/** @type {!Array<string>} */
+const requestCreatingNodeNames =
+    ['img', 'script', 'iframe', 'link', 'audio', 'video', 'source'];
+
+
+/**
+ * Determines if a node or its descendants match one of the passed node names.
+ * @param {!Array<!Node>|!NodeList<!Node>} nodes
+ * @param {!Array<string>} nodeNames
+ * @return {boolean}
+ */
+function subtreeContainsNodeName(nodes, nodeNames) {
   for (const node of nodes) {
-    if (nodeTypes.includes(node.nodeName.toLowerCase())) {
-      return true;
-    }
-
-    if (node.children && _descendentContainsNodeType(nodeTypes, node.children)) {
+    if (nodeNames.includes(node.nodeName.toLowerCase()) ||
+        subtreeContainsNodeName(node.children, nodeNames)) {
       return true;
     }
   }
-
   return false;
 }
 
+
+/**
+ * Start observing DOM mutations for added nodes that may initiate network
+ * requests.
+ * @param {!Function} callback
+ * @return {!MutationObserver}
+ */
 export function observeResourceFetchingMutations(callback) {
-  const mutationObserver = new MutationObserver(function (mutations) {
+  const mutationObserver = new MutationObserver((mutations) => {
+    // Typecast to fix: https://github.com/google/closure-compiler/issues/2539
+    // eslint-disable-next-line no-self-assign
+    mutations = /** @type {!Array<!MutationRecord>} */ (mutations);
+
     for (const mutation of mutations) {
-      switch (mutation.type) {
-      case "childList":
-        if (_descendentContainsNodeType(
-          _nodeTypesFetchingNetworkResources, mutation.addedNodes)) {
-          callback(mutation);
-        }
-        break;
-      case "attributes":
-        if (_nodeTypesFetchingNetworkResources.includes(mutation.target.tagName.toLowerCase())) {
-          callback(mutation);
-        }
-        break;
+      if (mutation.type == 'childList' &&
+          subtreeContainsNodeName(
+              mutation.addedNodes, requestCreatingNodeNames)) {
+        callback(mutation);
+      } else if (mutation.type == 'attributes' &&
+          requestCreatingNodeNames.includes(
+              mutation.target.tagName.toLowerCase())) {
+        callback(mutation);
       }
     }
   });
 
-  const observerConfig = {
+  mutationObserver.observe(document, {
     attributes: true,
     childList: true,
     subtree: true,
     attributeFilter: ['href', 'src'],
-  };
+  });
 
-  mutationObserver.observe(document, observerConfig);
   return mutationObserver;
 }
