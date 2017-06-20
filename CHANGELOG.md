@@ -1,6 +1,10 @@
 # Changelog
 
-### 0.2.0 (2017-06-20)
+### 0.2.1 (2017-06-20)
+
+- Update externs so umd code isn't mangled at build [#6]
+
+### 0.2.0 (2017-06-19)
 
 - Update the build to remove `console.log()` statements [#3]
 - Add a new `tti-polyfill-debug.js` file with the debug logs preserved [#3]
