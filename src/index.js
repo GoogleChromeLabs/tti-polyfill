@@ -13,10 +13,21 @@
 // limitations under the License.
 
 
-import FirstConsistentlyInteractiveDetector from './firstConsistentlyInteractiveDetector.js';
+import FirstConsistentlyInteractiveDetector
+    from './firstConsistentlyInteractiveDetector.js';
 
 
-export const getFirstConsistentlyInteractive = (opts) => {
+/**
+ * Returns a promise that resolves to the first consistently interactive time
+ * (in milliseconds) or null if the browser doesn't support the features
+ * required for detection.
+ * @param {!FirstConsistentlyInteractiveDetectorInit=} opts Configuration
+ *     options for the polyfill
+ * @return {!Promise} TODO(philipwalton): for some reason the type
+ *     {!Promise<(number|null)>} isn't working here, check if this is fixed in
+ *     a new version of closure compiler.
+ */
+export const getFirstConsistentlyInteractive = (opts = {}) => {
   if (!window.PerformanceLongTaskTiming) {
     return Promise.resolve(null);
   } else {

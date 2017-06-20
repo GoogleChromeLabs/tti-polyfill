@@ -4,14 +4,15 @@
   "description": "Polyfill for Time to Interactive. See https://goo.gl/OSmrPk",
   "main": "tti-polyfill.js",
   "scripts": {
-    "build": "rollup -c -m --format=umd --name=ttiPolyfill --output=tti-polyfill.js"
+    "lint": "eslint --fix src/*.js scripts/*.js tests/*.js",
+    "build": "npm run lint && node scripts/build.js"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/GoogleChrome/tti-polyfill.git"
   },
-  "author": "Deepanjan Roy (Google)",
   "contributors": [
+    "Deepanjan Roy (Google)",
     "Philip Walton <philip@philipwalton.com> (https://philipwalton.com/)"
   ],
   "license": "Apache-2.0",
@@ -20,10 +21,14 @@
   },
   "homepage": "https://github.com/GoogleChrome/tti-polyfill#readme",
   "devDependencies": {
-    "babel-plugin-external-helpers": "^6.22.0",
-    "babel-preset-es2015": "^6.24.1",
+    "chalk": "^1.1.3",
+    "eslint": "^4.0.0",
+    "eslint-config-google": "^0.8.0",
+    "fs-extra": "^3.0.1",
+    "google-closure-compiler-js": "^20170521.0.0",
+    "gzip-size": "^3.0.0",
     "rollup": "^0.41.6",
-    "rollup-plugin-babel": "^2.7.1",
-    "rollup-plugin-uglify": "^1.0.2"
+    "rollup-plugin-node-resolve": "^3.0.0",
+    "source-map": "^0.5.6"
   }
 }

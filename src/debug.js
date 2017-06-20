@@ -13,9 +13,19 @@
 // limitations under the License.
 
 
-/* eslint-disable */
+/**
+ * @define {boolean}
+ */
+let DEBUG = true;
 
 
-!function(){if(window.PerformanceLongTaskTiming){var g=window.__tti={e:[]};
-g.o=new PerformanceObserver(function(l){g.e=g.e.concat(l.getEntries())});
-g.o.observe({entryTypes:['longtask']})}}();
+/**
+ * Prints a log statement to the console if the DEBUG flag is true.
+ * @param {...*} args
+ */
+export const log = (...args) => {
+  if (DEBUG) {
+    // eslint-disable-next-line no-console
+    console.log(...args);
+  }
+};

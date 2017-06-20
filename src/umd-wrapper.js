@@ -13,18 +13,19 @@
 // limitations under the License.
 
 
-const {rollup} = require('rollup');
-const babel = require('rollup-plugin-babel');
-const uglify = require('rollup-plugin-uglify');
+/* global define, module */
 
-export default {
-  entry: './src/index.js',
-  plugins: [
-    babel({
-      babelrc: false,
-      plugins: ['external-helpers'],
-      presets: [['es2015', {modules: false}]],
-    }),
-    uglify(),
-  ],
-};
+
+import {getFirstConsistentlyInteractive} from './index.js';
+
+
+const moduleExport = {getFirstConsistentlyInteractive};
+
+
+if (typeof module != 'undefined' && module.exports) {
+  module.exports = moduleExport;
+} else if (typeof define === 'function' && define.amd) {
+  define('ttiPolyfill', [], () => moduleExport);
+} else {
+  window.ttiPolyfill = moduleExport;
+}
