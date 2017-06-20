@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.2.2 (2017-06-20)
+
+- Fix incorrectly mangled symbols [#7]
+
 ### 0.2.1 (2017-06-20)
 
 - Update externs so umd code isn't mangled at build [#6]
