@@ -17,9 +17,10 @@
 
 
 // UMD globals
-let exports;
 let define;
+define.amd;
 let module;
+module.exports;
 
 
 // TTI Polyfill global export
