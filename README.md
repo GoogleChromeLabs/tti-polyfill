@@ -55,13 +55,19 @@ The following table outlines the configuration options you can pass to the `getF
     </td>
   </tr>
   <tr valign="top">
-    <td><code>debugMode</code></td>
+    <td><code>useMutationObserver</code></td>
     <td><code>boolean</code></td>
     <td>
-      When <code>true</code>, progress message are printed to the console. This can be helpful in debugging.
+      When true (the default), a mutation observer is used to detect when added DOM elements will create additional network requests. This can be disabled to improve performance in cases where you know no additional request-creating DOM elements will be added.
     </td>
   </tr>
 </table>
+
+### The debug version
+
+A [debug](https://github.com/GoogleChrome/tti-polyfill/blob/master/tti-polyfill-debug.js) version of the polyfill ships with this repo that includes helpful `console.log()` statements that can be used to better understand how the polyfill is working under the hood.
+
+*__Note:__ usage for the debug version is exactly the same as the regular version.*
 
 ## Browser support
 
