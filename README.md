@@ -1,3 +1,7 @@
+:warning: **WARNING** :warning: we no longer recommend measuring TTI [in the field](https://web.dev/user-centric-performance-metrics/#in-the-field); instead, we recommend measuring [FID](https://web.dev/fid/), which can be done using the [`web-vitals`](https://github.com/GoogleChrome/web-vitals) JavaScript library. TTI will continue to be supported in [lab-measurement tools](https://web.dev/user-centric-performance-metrics/#in-the-lab) like [Lighthouse](https://github.com/GoogleChrome/lighthouse).
+
+* * *
+
 Time to Interactive Polyfill
 ============================
 
